@@ -21,24 +21,30 @@ const firaCode = Fira_Code({
 });
 
 export const metadata: Metadata = {
-  title: "Pratik Priyanshu — ML Engineer",
+  title: "Pratik Priyanshu | ML Engineer",
   description:
-    "ML Engineer specializing in Multi-Agent Systems, Quantum ML, and Edge AI. Building intelligent systems that push the boundaries of machine learning.",
-  keywords: [
-    "ML Engineer",
-    "Machine Learning",
-    "Multi-Agent Systems",
-    "Quantum ML",
-    "Edge AI",
-    "Deep Learning",
-    "Portfolio",
-  ],
-  authors: [{ name: "Pratik Priyanshu" }],
+    "ML Engineer bridging research and production in Multi-Agent AI, Quantum ML, and Production Systems.",
   openGraph: {
-    title: "Pratik Priyanshu — ML Engineer",
+    title: "Pratik Priyanshu | ML Engineer",
     description:
-      "ML Engineer specializing in Multi-Agent Systems, Quantum ML, and Edge AI.",
+      "Production-grade AI systems across GenAI, Quantum ML, and Multi-Agent Architectures.",
+    url: "https://pratikpriyanshu.dev",
+    siteName: "Pratik Priyanshu",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+      },
+    ],
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pratik Priyanshu | ML Engineer",
+    description:
+      "Production ML Engineer | GenAI | Quantum ML | Multi-Agent Systems",
+    images: ["/og-image.png"],
   },
 };
 

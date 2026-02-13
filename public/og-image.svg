@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="bg" cx="35%" cy="35%" r="85%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="45%" stop-color="#0b0f19"/>
+      <stop offset="100%" stop-color="#07090f"/>
+    </radialGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="
+          1 0 0 0 0
+          0 1 0 0 0
+          0 0 1 0 0
+          0 0 0 0.35 0" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="stroke" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g opacity="0.18">
+    <circle cx="120" cy="110" r="2" fill="#ffffff"/>
+    <circle cx="210" cy="160" r="1.5" fill="#ffffff"/>
+    <circle cx="330" cy="90" r="1.8" fill="#ffffff"/>
+    <circle cx="480" cy="140" r="1.2" fill="#ffffff"/>
+    <circle cx="610" cy="80" r="1.6" fill="#ffffff"/>
+    <circle cx="980" cy="120" r="2" fill="#ffffff"/>
+    <circle cx="1040" cy="210" r="1.4" fill="#ffffff"/>
+    <circle cx="900" cy="260" r="1.2" fill="#ffffff"/>
+    <circle cx="760" cy="190" r="1.4" fill="#ffffff"/>
+    <circle cx="115" cy="520" r="1.2" fill="#ffffff"/>
+    <circle cx="260" cy="470" r="1.6" fill="#ffffff"/>
+    <circle cx="420" cy="540" r="1.3" fill="#ffffff"/>
+    <circle cx="650" cy="510" r="1.5" fill="#ffffff"/>
+    <circle cx="840" cy="560" r="1.2" fill="#ffffff"/>
+    <circle cx="1030" cy="500" r="1.7" fill="#ffffff"/>
+  </g>
+  <g filter="url(#softGlow)">
+    <text x="92" y="230" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial"
+          font-size="86" font-weight="800" fill="#e5e7eb" letter-spacing="-1">
+      PRATIK
+    </text>
+    <text x="92" y="318" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial"
+          font-size="86" font-weight="800" fill="#60a5fa" letter-spacing="-1">
+      PRIYANSHU
+    </text>
+    <text x="96" y="372" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial"
+          font-size="34" font-weight="600" fill="#a1a1aa">
+      ML Engineer
+    </text>
+    <line x1="96" y1="404" x2="540" y2="404" stroke="url(#stroke)" stroke-width="2"/>
+    <text x="96" y="452" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial"
+          font-size="28" font-weight="600" fill="#cbd5e1">
+      GenAI <tspan fill="#64748b">&#8226;</tspan> Quantum ML <tspan fill="#64748b">&#8226;</tspan> Production Systems
+    </text>
+    <text x="96" y="548" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+          font-size="22" font-weight="600" fill="#64748b">
+      pratikpriyanshu.dev
+    </text>
+  </g>
+  <g>
+    <circle cx="910" cy="315" r="158" fill="#0b1220" opacity="0.9"/>
+    <circle cx="910" cy="315" r="158" fill="none" stroke="url(#ring)" stroke-width="6" opacity="0.9"/>
+    <text x="910" y="330" text-anchor="middle"
+          font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial"
+          font-size="34" font-weight="800" fill="#94a3b8" opacity="0.85">
+      AVATAR
+    </text>
+  </g>
+</svg>

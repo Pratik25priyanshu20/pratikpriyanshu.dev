@@ -10,6 +10,8 @@ const tagColors: Record<string, string> = {
   "Quantum": "#8b5cf6",
   "ML": "#10b981",
   "Research": "#f59e0b",
+  "GenAI": "#3b82f6",
+  "RAG": "#f59e0b",
   "Edge AI": "#10b981",
   "Optimization": "#06b6d4",
   "Deployment": "#3b82f6",
@@ -36,74 +38,85 @@ export default function Blog() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {blogPosts.map((post, index) => (
-            <motion.a
-              key={post.id}
-              href={post.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="card group flex flex-col cursor-pointer"
-            >
-              {/* Thumbnail with animated gradient */}
-              <div className="blog-thumbnail w-full h-40 mb-4">
-                <div className="w-full h-full bg-gradient-to-br from-accent-blue/10 via-accent-purple/10 to-accent-cyan/10 flex items-center justify-center relative">
-                  <div className="text-center">
-                    <span className="text-3xl block mb-2 opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">
-                      {index === 0 ? "🤖" : index === 1 ? "⚛️" : "📡"}
-                    </span>
-                    <span className="text-text-muted text-xs font-mono">
-                      {post.tags[0]}
-                    </span>
+          {blogPosts.map((post, index) => {
+            const isComingSoon = post.comingSoon;
+            const Wrapper = isComingSoon ? motion.div : motion.a;
+            const wrapperProps = isComingSoon
+              ? {}
+              : { href: post.url, target: "_blank", rel: "noopener noreferrer" };
+
+            return (
+              <Wrapper
+                key={post.id}
+                {...(wrapperProps as Record<string, string>)}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`card group flex flex-col ${isComingSoon ? "opacity-70" : "cursor-pointer"}`}
+              >
+                {/* Thumbnail with animated gradient */}
+                <div className="blog-thumbnail w-full h-40 mb-4 relative">
+                  <div className="w-full h-full bg-gradient-to-br from-accent-blue/10 via-accent-purple/10 to-accent-cyan/10 flex items-center justify-center relative">
+                    <div className="text-center">
+                      <span className="text-3xl block mb-2 opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">
+                        {index === 0 ? "⚛️" : index === 1 ? "⚛️" : "🤖"}
+                      </span>
+                      <span className="text-text-muted text-xs font-mono">
+                        {post.tags[0]}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-3">
-                {post.tags.map((tag) => {
-                  const color = tagColors[tag] || "#3b82f6";
-                  return (
-                    <span
-                      key={tag}
-                      className="text-xs font-mono px-2 py-0.5 rounded"
-                      style={{
-                        backgroundColor: `${color}15`,
-                        color: `${color}cc`,
-                      }}
-                    >
-                      {tag}
+                  {isComingSoon && (
+                    <span className="absolute top-3 right-3 text-xs font-mono px-2.5 py-1 rounded-lg bg-accent-orange/15 text-accent-orange border border-accent-orange/25">
+                      Coming Soon
                     </span>
-                  );
-                })}
-              </div>
+                  )}
+                </div>
 
-              {/* Title */}
-              <h3 className="text-lg font-heading font-semibold text-text-primary mb-2 group-hover:text-accent-blue-light transition-colors duration-300">
-                {post.title}
-              </h3>
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {post.tags.map((tag) => {
+                    const color = tagColors[tag] || "#3b82f6";
+                    return (
+                      <span
+                        key={tag}
+                        className="text-xs font-mono px-2 py-0.5 rounded"
+                        style={{
+                          backgroundColor: `${color}15`,
+                          color: `${color}cc`,
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    );
+                  })}
+                </div>
 
-              {/* Excerpt */}
-              <p className="text-text-secondary text-sm leading-relaxed mb-4 flex-1">
-                {post.excerpt}
-              </p>
+                {/* Title */}
+                <h3 className="text-lg font-heading font-semibold text-text-primary mb-2 group-hover:text-accent-blue-light transition-colors duration-300">
+                  {post.title}
+                </h3>
 
-              {/* Meta */}
-              <div className="flex items-center justify-between text-xs text-text-muted pt-4 border-t border-border/50">
-                <span>{post.date}</span>
-                <span className="flex items-center gap-1">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                  {post.readTime}
-                </span>
-              </div>
-            </motion.a>
-          ))}
+                {/* Excerpt */}
+                <p className="text-text-secondary text-sm leading-relaxed mb-4 flex-1">
+                  {post.excerpt}
+                </p>
+
+                {/* Meta */}
+                <div className="flex items-center justify-between text-xs text-text-muted pt-4 border-t border-border/50">
+                  <span>{post.date}</span>
+                  <span className="flex items-center gap-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    {post.readTime}
+                  </span>
+                </div>
+              </Wrapper>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -20,30 +20,34 @@ const firaCode = Fira_Code({
   display: "swap",
 });
 
+const SITE_URL = "https://pratikpriyanshu-dev.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Pratik Priyanshu | ML Engineer",
+  metadataBase: new URL(SITE_URL),
+  title: "Pratik Priyanshu | ML Engineer | GenAI, Quantum ML & Multi-Agent Systems",
   description:
-    "ML Engineer bridging research and production in Multi-Agent AI, Quantum ML, and Production Systems.",
+    "ML Engineer bridging research and production across GenAI, Quantum ML, Multi-Agent AI, and Privacy-Preserving Systems. Building production-grade AI at scale.",
   openGraph: {
-    title: "Pratik Priyanshu | ML Engineer",
+    title: "Pratik Priyanshu | ML Engineer | GenAI, Quantum ML & Multi-Agent Systems",
     description:
-      "Production-grade AI systems across GenAI, Quantum ML, and Multi-Agent Architectures.",
-    url: "https://pratikpriyanshu.dev",
+      "ML Engineer bridging research and production across GenAI, Quantum ML, Multi-Agent AI, and Privacy-Preserving Systems. Building production-grade AI at scale.",
+    url: SITE_URL,
     siteName: "Pratik Priyanshu",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
+        alt: "Pratik Priyanshu | ML Engineer",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pratik Priyanshu | ML Engineer",
+    title: "Pratik Priyanshu | ML Engineer | GenAI, Quantum ML & Multi-Agent Systems",
     description:
-      "Production ML Engineer | GenAI | Quantum ML | Multi-Agent Systems",
+      "ML Engineer bridging research and production across GenAI, Quantum ML, Multi-Agent AI, and Privacy-Preserving Systems. Building production-grade AI at scale.",
     images: ["/og-image.png"],
   },
 };

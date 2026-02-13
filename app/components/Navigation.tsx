@@ -72,10 +72,23 @@ export default function Navigation() {
         <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 flex items-center justify-between h-16">
           <button
             onClick={() => scrollTo("hero")}
-            className="font-heading font-bold text-xl gradient-text hover:opacity-80 transition-opacity"
+            className="hover:opacity-80 transition-opacity"
             aria-label="Go to top"
           >
-            PP
+            <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="logo-grad" x1="0" y1="0" x2="64" y2="64">
+                  <stop offset="0%" stopColor="#3b82f6"/>
+                  <stop offset="100%" stopColor="#06b6d4"/>
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="32" r="30" stroke="url(#logo-grad)" strokeWidth="3"/>
+              <path d="M24 42V22H36C41 22 44 25 44 29C44 33 41 36 36 36H24"
+                    stroke="url(#logo-grad)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"/>
+            </svg>
           </button>
 
           {/* Desktop links */}

@@ -81,13 +81,20 @@ export default function Navigation() {
                   <stop offset="0%" stopColor="#3b82f6"/>
                   <stop offset="100%" stopColor="#06b6d4"/>
                 </linearGradient>
+                <filter id="logo-glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
               </defs>
-              <circle cx="32" cy="32" r="30" stroke="url(#logo-grad)" strokeWidth="3"/>
-              <path d="M24 42V22H36C41 22 44 25 44 29C44 33 41 36 36 36H24"
-                    stroke="url(#logo-grad)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"/>
+              {/* Dashed orbits */}
+              <ellipse cx="32" cy="32" rx="28" ry="10" stroke="url(#logo-grad)" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" transform="rotate(-35 32 32)"/>
+              <ellipse cx="32" cy="32" rx="28" ry="10" stroke="url(#logo-grad)" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.3" transform="rotate(35 32 32)"/>
+              {/* Nucleus ring with P */}
+              <circle cx="32" cy="32" r="13" stroke="url(#logo-grad)" strokeWidth="2.5" fill="none" filter="url(#logo-glow)"/>
+              <text x="32" y="39" textAnchor="middle" fontFamily="ui-sans-serif,system-ui" fontSize="18" fontWeight="800" fill="url(#logo-grad)">P</text>
+              {/* Electrons */}
+              <circle cx="54" cy="18" r="3" fill="#06b6d4" filter="url(#logo-glow)"/>
+              <circle cx="10" cy="46" r="2" fill="#8b5cf6" opacity="0.7"/>
             </svg>
           </button>
 

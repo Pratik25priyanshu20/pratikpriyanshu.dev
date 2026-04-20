@@ -71,15 +71,15 @@ export default function Contact() {
             Get in <span className="gradient-text">Touch</span>
           </h2>
           <p className="section-subtitle mx-auto">
-            Interested in collaborating on ML projects, research, or just want
-            to chat about AI? I&apos;d love to hear from you.
+            Interested in research collaboration, PhD supervision, or discussing
+            evaluation methodology in ML? I&apos;d love to hear from you.
           </p>
           <div className="mt-4 inline-flex items-center gap-2 text-accent-green text-sm font-medium">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
             </span>
-            Available for opportunities
+            Open to PhD positions
           </div>
         </motion.div>
 

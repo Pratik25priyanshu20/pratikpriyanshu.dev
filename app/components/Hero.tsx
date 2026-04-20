@@ -57,27 +57,27 @@ export default function Hero() {
               variants={fadeUp}
               className="text-lg sm:text-xl font-heading font-medium text-text-secondary mb-6"
             >
-              ML Engineer
+              ML Researcher
             </motion.p>
 
             <motion.p
               variants={fadeUp}
               className="text-base sm:text-lg text-text-secondary mb-4 max-w-xl mx-auto lg:mx-0 leading-relaxed"
             >
-              Bridging Research and Production in
+              Rigorous Evaluation &amp; Reproducible Frameworks for
             </motion.p>
 
             <motion.p
               variants={fadeUp}
               className="text-base sm:text-lg max-w-xl mx-auto lg:mx-0 mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 justify-center lg:justify-start"
             >
-              <span className="text-accent-blue-light font-medium">Multi-Agent AI</span>
-              <span className="text-text-muted">&bull;</span>
               <span className="text-accent-purple font-medium">Quantum ML</span>
               <span className="text-text-muted">&bull;</span>
-              <span className="text-accent-cyan font-medium">GenAI</span>
+              <span className="text-accent-blue-light font-medium">Trustworthy AI</span>
               <span className="text-text-muted">&bull;</span>
-              <span className="text-accent-green font-medium">Production Systems</span>
+              <span className="text-accent-cyan font-medium">NLP &amp; RAG</span>
+              <span className="text-text-muted">&bull;</span>
+              <span className="text-accent-green font-medium">Multimodal Evaluation</span>
             </motion.p>
 
             <motion.p

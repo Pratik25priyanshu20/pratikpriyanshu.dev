@@ -31,40 +31,40 @@ export default function About() {
             transition={{ duration: 0.6 }}
           >
             <p>
-              I build production grade machine learning systems at the
-              intersection of research and real world deployment.
+              I research machine learning with a focus on building rigorous,
+              reproducible evaluation frameworks for complex scientific and
+              real-world problems.
             </p>
             <p>
               My work spans{" "}
               <span className="text-accent-purple font-medium">
-                quantum augmented drug discovery
+                hybrid quantum-classical evaluation
               </span>
               ,{" "}
-              <span className="text-accent-orange font-medium">
-                privacy preserving AI
+              <span className="text-accent-red font-medium">
+                trustworthy legal AI
               </span>
               , and{" "}
-              <span className="text-accent-blue-light font-medium">
-                multi agent orchestration systems
+              <span className="text-accent-cyan font-medium">
+                multimodal coherence evaluation
               </span>
-              {" "}but the consistent focus is execution. I design end to end
-              solutions: from data engineering pipelines (Kafka, Spark) and model
-              development (quantum classical hybrids, transformers) to scalable
-              deployment (FastAPI, Kubernetes, MLOps).
+              {" "}&mdash; but the consistent thread is methodological depth:
+              ablation studies, uncertainty quantification, statistical rigor,
+              and honest reporting of null results.
             </p>
             <p>
-              I&apos;m particularly interested in translating advanced research
-              into reliable systems, taking ideas from papers and turning them
-              into deployable, tested architectures.
+              I&apos;m driven by the question of how we know what we claim to
+              know about ML systems &mdash; designing evaluation protocols that
+              separate genuine capability from artifacts of experimental setup.
             </p>
             <p>
               Currently completing my{" "}
               <span className="text-text-primary font-medium">
                 M.Sc. in Applied Data Science
               </span>{" "}
-              at SRH Heidelberg (Grade: 1.8), and seeking Werkstudent
-              opportunities in Germany where I can contribute to production ML
-              and GenAI systems.
+              at SRH Heidelberg (Grade: 1.8), and seeking PhD positions in
+              machine learning where reproducibility, principled evaluation, and
+              methodological rigour are central values.
             </p>
           </motion.div>
         </motion.div>

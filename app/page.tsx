@@ -2,6 +2,7 @@ import StarBackground from "./components/StarBackground";
 import Navigation from "./components/Navigation";
 import Hero from "./components/Hero";
 import About from "./components/About";
+import Publications from "./components/Publications";
 import Projects from "./components/Projects";
 import Blog from "./components/Blog";
 import Skills from "./components/Skills";
@@ -18,6 +19,8 @@ export default function Home() {
         <Hero />
         <div className="section-divider" />
         <About />
+        <div className="section-divider" />
+        <Publications />
         <div className="section-divider" />
         <Projects />
         <div className="section-divider" />

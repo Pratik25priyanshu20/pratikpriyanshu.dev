@@ -74,6 +74,122 @@ export const projects: Project[] = [
     color: "#8b5cf6",
   },
   {
+    id: "jurag",
+    title: "JuRAG | Graph-Augmented Legal Retrieval & Responsible AI",
+    tagline: "Research framework evaluating how retrieval strategy affects faithfulness, fairness, and grounding in AI-assisted legal decision support across 251k German court decisions",
+    description:
+      "A research framework for building trustworthy legal AI systems, evaluated on 251,038 real German court decisions. It investigates how retrieval strategy — from dense embedding search to citation graph-augmented hybrid retrieval — affects the quality, faithfulness, and fairness of AI-assisted legal decision support.",
+    challenge:
+      "Legal AI systems must be faithful, fair, and grounded — yet most RAG implementations treat retrieval as a black box. Dense embeddings miss exact statute references, hybrid retrieval can introduce noise, and no principled framework exists to measure how retrieval strategy impacts downstream hallucination rates, demographic bias, or citation grounding in legal contexts. This project addresses four research questions: whether hybrid retrieval outperforms dense-only for German legal text, whether citation graph augmentation improves precedent retrieval, how retrieval strategies affect faithfulness, and whether they introduce or mitigate demographic biases.",
+    approach:
+      "Designed a LangGraph StateGraph pipeline with 4 nodes: Query Understanding + Retrieval (domain/intent classification dispatching to 3 retrieval variants), Legal Analysis + Citation Grounding (NLI-verified claim-source entailment), Validation (multi-run LLM-as-Judge with calibrated confidence), and Report Generation. Three retrieval variants are compared: S1 (dense BGE-M3 + cross-encoder reranking), S2 (hybrid dense + BM25 with Reciprocal Rank Fusion), and S3 (graph-augmented hybrid with citation graph 1-hop expansion and PageRank-informed re-scoring). Section-aware chunking tags each chunk with German legal structure (Tenor, Tatbestand, Entscheidungsgründe) for intent-based boosting.",
+    implementation: [
+      "3 retrieval variants: dense (BGE-M3 + reranker), hybrid (dense + BM25 + RRF), graph-augmented (hybrid + citation graph 1-hop expansion with PageRank/HITS scoring)",
+      "Citation graph module built on 251k decisions with PageRank, HITS hub/authority scores, and temporal recency weighting",
+      "NLI-based citation grounding using mDeBERTa cross-encoder — revealing true grounding at 42–45% vs. 81.7% without NLI verification",
+      "6-dimension Responsible AI evaluation: citation grounding, hallucination detection, demographic perturbation testing (50 pairs), paraphrase consistency, confidence calibration (ECE/Brier), cross-lingual fairness",
+      "Section-aware retrieval with intent-based boosting for German legal document structure",
+      "Statistical rigor: Wilcoxon signed-rank, Mann-Whitney U, Cohen's d, bootstrap CIs (10k resamples), Holm-Bonferroni correction",
+      "Streamlit dashboard with 5 interactive tabs and FastAPI backend",
+      "95 unit + integration tests with Makefile automation",
+    ],
+    metrics: [
+      { label: "Court Decisions", value: "251,038" },
+      { label: "Retrieval Variants", value: "3" },
+      { label: "RAI Dimensions", value: "6" },
+      { label: "Evaluation Metrics", value: "14" },
+    ],
+    learnings: [
+      "Hybrid retrieval achieves 50% higher citation accuracy on keyword-heavy legal queries — BM25 captures exact statute references that dense embeddings miss",
+      "NLI verification is essential: without it, citation accuracy appeared at 81.7%; with NLI, actual grounding dropped to 42–45%, exposing false attributions",
+      "BM25 can introduce noise for purely semantic queries, occasionally degrading hybrid results below dense-only",
+      "Section-aware chunking with intent-based boosting significantly improves retrieval relevance for structured legal documents",
+      "Demographic perturbation testing reveals subtle biases invisible to standard accuracy metrics",
+    ],
+    researchContribution: [
+      "Demonstrated that retrieval strategy choice directly impacts downstream faithfulness and fairness in legal AI",
+      "Introduced NLI-verified citation grounding as a standard for legal RAG evaluation",
+      "Designed graph-augmented retrieval with PageRank/HITS-informed re-scoring for legal precedent discovery",
+      "Built a 6-dimension Responsible AI evaluation framework with statistical rigor for legal AI systems",
+    ],
+    whyThisMatters:
+      "Legal AI demands verifiable faithfulness. JuRAG shows that retrieval strategy is not just an engineering choice — it directly determines whether an AI system hallucinates, introduces bias, or produces grounded legal analysis.",
+    techStack: [
+      "Python",
+      "LangGraph",
+      "Qdrant",
+      "BGE-M3",
+      "BM25",
+      "mDeBERTa (NLI)",
+      "NetworkX",
+      "Ollama / Groq",
+      "FastAPI",
+      "Streamlit",
+      "Docker",
+    ],
+    links: [
+      { label: "GitHub", url: "https://github.com/Pratik25priyanshu20/JuRAG" },
+    ],
+    color: "#ef4444",
+  },
+  {
+    id: "cmsci",
+    title: "cMSCI | Calibrated Multimodal Coherence Evaluation",
+    tagline: "Novel uncertainty-aware evaluation metric for tri-modal (text-image-audio) coherence, extending GRAM to heterogeneous embedding spaces — manuscript under review",
+    description:
+      "Proposed cMSCI (calibrated Multimodal Semantic Coherence Index), a geometrically grounded, uncertainty-aware evaluation metric for tri-modal coherence. Extends GRAM (ICLR 2025) to heterogeneous embedding spaces (CLIP + CLAP) with probabilistic scoring via ProbVLM and contrastive calibration against domain-specific negative banks.",
+    challenge:
+      "Evaluating semantic coherence across text, image, and audio modalities lacks principled metrics. Existing scores (CLIPScore, BLIPScore) operate in single embedding spaces, ignore calibration, and provide no uncertainty estimates. No framework exists for measuring whether generated multimodal content is semantically aligned across three modalities simultaneously, especially in settings without reliable ground truth.",
+    approach:
+      "Designed cMSCI as a composite metric aggregating calibrated embedding similarities across CLIP (text-image) and CLAP (text-audio) spaces, with probabilistic scoring via ProbVLM and contrastive calibration. Structured the evaluation around three research questions: metric sensitivity to controlled perturbations (RQ1), effect of semantic planning on coherence (RQ2), and correlation with human judgments (RQ3). Applied rigorous statistical methodology throughout: Shapiro-Wilk normality testing, Wilcoxon signed-rank tests, Holm-Bonferroni correction, bootstrap CIs (10,000 resamples), and prospective power analysis.",
+    implementation: [
+      "cMSCI metric combining calibrated CLIP and CLAP similarities with probabilistic scoring via ProbVLM and contrastive negative banks",
+      "270 controlled experimental runs across 30 prompts, 3 seeds, and 3 perturbation conditions (baseline, wrong_image, wrong_audio)",
+      "4 planning modes compared: direct (baseline), single planner, council (3 LLM merge), and extended prompt",
+      "Human evaluation study: 3 independent raters, 30 blind samples, ICC(3,k) = 0.873, Krippendorff's alpha = 0.684",
+      "Hybrid generation pipeline: Stable Diffusion + CLIP-ranked retrieval for images, AudioLDM + CLAP-based retrieval for audio",
+      "Full statistical suite: bootstrap BCa CIs, paired t-tests, Wilcoxon signed-rank, effect size estimation, power analysis",
+      "Streamlit-based blind human evaluation app with session management and re-rating support",
+      "84 unit tests with GitHub Actions CI/CD",
+    ],
+    metrics: [
+      { label: "Effect Size (RQ1)", value: "d > 2.2" },
+      { label: "Human Correlation", value: "\u03C1 = 0.379" },
+      { label: "Controlled Runs", value: "270" },
+      { label: "Statistical Significance", value: "p < 10\u207B\u00B9\u00B3" },
+    ],
+    learnings: [
+      "cMSCI is sensitive to controlled semantic perturbations with large effect sizes (d > 2.2), confirming metric validity",
+      "Semantic planning does not improve retrieval-based coherence (|d| \u2264 0.19) — an informative null result attributable to index ceiling effects",
+      "Moderate but statistically significant human correlation (\u03C1 = 0.379, p = 0.039) indicates cMSCI captures meaningful coherence signal",
+      "Honest null results are as valuable as positive findings — well-powered negative evidence prevents wasted research effort",
+      "Cross-space coherence measurement requires calibration against domain-specific negatives to avoid inflated scores",
+    ],
+    researchContribution: [
+      "Proposed cMSCI, a novel calibrated metric for tri-modal coherence evaluation extending GRAM (ICLR 2025) to heterogeneous embedding spaces",
+      "Validated metric sensitivity with controlled perturbations and human judgment correlation",
+      "Reported an informative null result on semantic planning with rigorous power analysis",
+      "Outperformed CLIPScore, BLIPScore, and CCA baselines on coherence evaluation",
+    ],
+    whyThisMatters:
+      "As multimodal generation systems proliferate, principled evaluation metrics are essential. cMSCI demonstrates that calibrated, uncertainty-aware metrics can capture meaningful coherence signals across heterogeneous modalities — and that honest reporting of null results advances the field as much as positive findings.",
+    techStack: [
+      "Python",
+      "CLIP",
+      "CLAP",
+      "ProbVLM",
+      "Stable Diffusion",
+      "AudioLDM",
+      "Hugging Face",
+      "Streamlit",
+      "Plotly",
+    ],
+    links: [
+      { label: "GitHub", url: "https://github.com/Pratik25priyanshu20/MultiModal-Coherence-Evaluation-and-Generation" },
+    ],
+    color: "#a855f7",
+  },
+  {
     id: "swim",
     title: "SWIM | Multi-Agent AI for Environmental Monitoring",
     tagline: "Surface Water Intelligence & Monitoring: a multi-agent system for predicting Harmful Algal Blooms across German lakes using satellite, in-situ, and visual data",
@@ -124,9 +240,69 @@ export const projects: Project[] = [
       "Streamlit",
     ],
     links: [
-      { label: "GitHub", url: "https://github.com/Pratik25priyanshu20/SWIM" },
+      { label: "GitHub", url: "https://github.com/Pratik25priyanshu20/Swim-Agents" },
     ],
     color: "#10b981",
+  },
+  {
+    id: "haftung",
+    title: "Haftung-AI | Multi-Agent Traffic Accident Liability Analysis",
+    tagline: "9-agent system for analyzing traffic accident liability under German law (StVO) with vision perception, telemetry parsing, and RAG-augmented legal reasoning",
+    description:
+      "An LLM-powered multi-agent system for analyzing traffic accident liability under German traffic law (StVO). It orchestrates nine specialized agents through LangGraph — from YOLOv8 scene perception to CAN bus telemetry parsing to RAG-augmented legal reasoning — and compares three structurally distinct pipeline variants against 30 hand-authored ground-truth scenarios.",
+    challenge:
+      "Traffic accident liability analysis requires fusing heterogeneous evidence — dashcam video, vehicle telemetry, and legal statutes — into a coherent legal assessment. Pure LLM inference hallucinates legal references, while single-agent systems cannot handle the multi-modal evidence chain. No existing framework compares how retrieval augmentation and constraint validation improve baseline LLM reasoning for German traffic law.",
+    approach:
+      "Designed a 9-agent LangGraph pipeline with three structurally distinct variants: S1 (baseline pure LLM inference), S2 (RAG-augmented with German traffic statutes and case law via Qdrant), and S3 (RAG + iterative validation with constraint enforcement and multi-run LLM judge scoring). The Vision Agent performs YOLOv8 + DeepSORT object tracking with Kalman filtering and scene graph construction. The Telemetry Agent parses CAN bus data (CSV/ASC/BLF) for speed profiling. Evidence, Contradiction, and Causation agents handle legal reasoning, while the Validation Agent enforces consistency through iterative re-analysis loops.",
+    implementation: [
+      "9 specialized agents: Vision (YOLOv8 + DeepSORT + Kalman), Telemetry (CAN bus parsing), RAG (hybrid dense + BM25), Evidence extraction, Contradiction detection, Causation reasoning (3 variants), Validation (multi-run LLM judge), Report generation (Jinja2 + WeasyPrint PDF), TextInput",
+      "3 pipeline variants compared: S1 (pure LLM), S2 (RAG-augmented), S3 (RAG + validation with constraint enforcement)",
+      "YOLOv8 perception with DeepSORT tracking, Kalman + RTS smoothing, and scene graph construction",
+      "ISO 26262 ASIL classification with Time-to-Collision safety metrics",
+      "Hybrid retrieval (\u03B1=0.6 dense/BM25 blending) over German StVO statutes and case law",
+      "30 ground-truth scenarios across 6 accident categories (rear-end, side, head-on, intersection, pedestrian, single-vehicle) with 5 variations each",
+      "Evaluation suite: causation accuracy, responsibility MAE, contributing factors F1, ECE, Brier score, hallucination rate, retrieval quality (P@5, MRR, nDCG@5)",
+      "244 passing tests (unit + integration + evaluation) with Docker Compose deployment",
+    ],
+    metrics: [
+      { label: "Specialized Agents", value: "9" },
+      { label: "Pipeline Variants", value: "3" },
+      { label: "Test Scenarios", value: "30" },
+      { label: "Passing Tests", value: "244" },
+    ],
+    learnings: [
+      "RAG augmentation with legal statutes significantly reduces hallucinated legal references compared to pure LLM inference",
+      "Iterative validation with constraint enforcement catches inconsistencies that single-pass analysis misses",
+      "Multi-modal evidence fusion (vision + telemetry + legal) produces more defensible liability assessments than any single modality",
+      "Pairwise contradiction detection between evidence sources is critical for legal reasoning integrity",
+      "Structured evaluation against hand-authored ground truth exposes failure modes invisible to LLM self-evaluation",
+    ],
+    researchContribution: [
+      "Designed a 9-agent architecture bridging perception, telemetry, and legal reasoning for accident analysis",
+      "Compared three structurally distinct pipeline variants (pure LLM vs RAG vs RAG + validation) on hand-authored legal scenarios",
+      "Integrated ISO 26262 safety classification with LLM-based legal reasoning",
+      "Built a reproducible evaluation framework with 30 ground-truth scenarios and 8 quantitative metrics",
+    ],
+    whyThisMatters:
+      "Haftung-AI demonstrates that multi-agent architectures can bridge the gap between raw sensor evidence and legal reasoning — showing measurable improvements from retrieval augmentation and constraint validation over pure LLM inference for safety-critical legal analysis.",
+    techStack: [
+      "Python",
+      "LangGraph",
+      "Groq (LLaMA 3.3 70B)",
+      "Qdrant",
+      "BGE-large",
+      "BM25",
+      "YOLOv8",
+      "DeepSORT",
+      "FastAPI",
+      "Streamlit",
+      "Docker",
+      "WeasyPrint",
+    ],
+    links: [
+      { label: "GitHub", url: "https://github.com/Pratik25priyanshu20/Haftung-AI" },
+    ],
+    color: "#ec4899",
   },
   {
     id: "arkis",
@@ -185,61 +361,6 @@ export const projects: Project[] = [
       { label: "GitHub", url: "https://github.com/Pratik25priyanshu20/ARKIS-Agentic-RAG" },
     ],
     color: "#3b82f6",
-  },
-  {
-    id: "homomorphic",
-    title: "Homomorphic ML | Privacy Preserving Inference",
-    tagline: "Running machine learning inference directly on encrypted data (CKKS, 128-bit security)",
-    description:
-      "Built an end-to-end privacy-preserving ML system enabling secure inference on sensitive healthcare data without exposing plaintext inputs to the server. The model never sees raw patient features \u2014 only encrypted vectors.",
-    challenge:
-      "Cloud ML conflicts with data protection laws (GDPR Articles 9, 25, 32). Healthcare and financial institutions cannot send raw data to third-party ML providers. However, homomorphic encryption introduces high computational overhead, noise growth, limited multiplicative depth, and activation function constraints.",
-    approach:
-      "Selected CKKS scheme for approximate floating-point arithmetic. Replaced non-polynomial activations (ReLU, sigmoid) with HE-compatible polynomial approximations. Designed a shallow NN architecture to control multiplicative depth. Used batching (SIMD slots) to improve throughput. Implemented affine calibration to align encrypted logits with plaintext predictions. Optimized encryption parameters (poly_modulus_degree 8192\u201316384, global_scale \u2248 2^40) for ML workloads with managed noise growth through controlled depth, rescaling, and weight normalization.",
-    implementation: [
-      "FastAPI encrypted inference server with client SDK (encrypt \u2192 send \u2192 decrypt)",
-      "TenSEAL CKKS implementation with 128-bit security (RLWE hardness)",
-      "Encrypted Logistic Regression: single encrypted dot product + bias, minimal depth",
-      "HE-friendly Neural Network: Input \u2192 Linear \u2192 (0.5x + 0.5) \u2192 Linear \u2192 Logit with depth-free activation",
-      "SIMD batching for throughput optimization across ciphertext slots",
-      "Affine calibration layer to align encrypted logits with plaintext predictions",
-      "Streamlit dashboard for secure prediction demo",
-      "Benchmarking suite: encrypted vs plaintext accuracy, confusion matrix alignment, logit deviation analysis",
-    ],
-    metrics: [
-      { label: "Security Level", value: "128-bit" },
-      { label: "Accuracy Deviation", value: "<3%" },
-      { label: "Inference Latency", value: "~1s" },
-      { label: "Encryption Overhead", value: "10\u2013100x" },
-    ],
-    learnings: [
-      "Polynomial activation approximation is the primary HE bottleneck for accuracy",
-      "CKKS is significantly better suited than BFV for ML workloads due to approximate arithmetic",
-      "SIMD batching is essential for practical encrypted inference speeds",
-      "HE inference is viable today; encrypted training remains impractical",
-    ],
-    researchContribution: [
-      "Demonstrated end-to-end encrypted inference pipeline with cryptographic separation of client/server roles",
-      "Implemented affine calibration for post-encryption logit alignment \u2014 reducing probability drift",
-      "Designed depth-controlled NN architecture compatible with CKKS noise budget",
-      "Benchmarked real-world accuracy\u2013latency tradeoffs absent from most HE-ML literature",
-    ],
-    whyThisMatters:
-      "As GDPR and healthcare data regulations tighten, privacy-preserving ML moves from academic curiosity to production necessity. This system proves that encrypted inference is viable today for classification workloads on sensitive data.",
-    techStack: [
-      "Python",
-      "TenSEAL (CKKS)",
-      "Microsoft SEAL",
-      "PyTorch",
-      "Scikit-learn",
-      "FastAPI",
-      "Streamlit",
-      "NumPy",
-    ],
-    links: [
-      { label: "GitHub", url: "https://github.com/Pratik25priyanshu20/Homomorphic-Encryption-for-Machine-Learning" },
-    ],
-    color: "#f59e0b",
   },
   {
     id: "autobahn",

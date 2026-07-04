@@ -18,6 +18,7 @@ const HELP = `available commands:
   cat about.txt       who is this guy
   pip install exoveil install the transit detector
   ./detect_transit    run detection on a light curve
+  ./collapse_star     you probably shouldn't
   cite exoveil        copy BibTeX
   open <section>      jump to a section (projects, papers, contact)
   whoami              you, presumably
@@ -129,6 +130,17 @@ export default function Terminal() {
           print("loading world model (3.2M params)...");
           await new Promise((r) => setTimeout(r, 700));
           print(TRANSIT_ART, "accent");
+          break;
+        }
+        case /collapse_star/.test(head): {
+          print("WARNING: initiating gravitational collapse...", "warn");
+          await new Promise((r) => setTimeout(r, 600));
+          print("Chandrasekhar limit exceeded. forming event horizon.");
+          window.dispatchEvent(new CustomEvent("spawn-blackhole"));
+          await new Promise((r) => setTimeout(r, 400));
+          print("black hole active for 7s. watch the stars behind this window.", "accent");
+          print("(tip: you can also summon one by holding your mouse down on empty space)", "out");
+          setTimeout(() => setOpen(false), 1800);
           break;
         }
         case head === "cite": {

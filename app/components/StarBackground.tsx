@@ -14,6 +14,8 @@ interface Particle {
   driftX: number;
   driftY: number;
   depth: number;
+  ox: number; // black-hole displacement
+  oy: number;
 }
 
 interface ShootingStar {
@@ -25,17 +27,33 @@ interface ShootingStar {
   maxLife: number;
 }
 
+interface Comet {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  trail: { x: number; y: number }[];
+}
+
 export default function StarBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const shootingStarsRef = useRef<ShootingStar[]>([]);
+  const cometsRef = useRef<Comet[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const scrollRef = useRef(0);
   const animFrameRef = useRef<number>(0);
   const isVisibleRef = useRef(true);
   const nextShootingStarRef = useRef(0);
+  const nextCometRef = useRef(0);
   const konamiUntilRef = useRef(0);
   const konamiProgressRef = useRef(0);
+  const pulsarIdxRef = useRef(-1);
+  const binaryIdxRef = useRef(-1);
+  const supernovaRef = useRef({ idx: -1, start: 0 });
+  const nextSupernovaRef = useRef(0);
+  const blackHoleRef = useRef({ x: 0, y: 0, until: 0, held: false, strength: 0 });
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const initParticles = useCallback((width: number, height: number) => {
     const isMobile = width < 768;
@@ -57,8 +75,27 @@ export default function StarBackground() {
         driftX: (Math.random() - 0.5) * 0.3,
         driftY: (Math.random() - 0.5) * 0.3,
         depth,
+        ox: 0,
+        oy: 0,
       };
     });
+
+    // pulsar: a star in the upper part of the field
+    const upper = particlesRef.current
+      .map((p, i) => ({ p, i }))
+      .filter(({ p }) => p.baseY < height * 0.4);
+    pulsarIdxRef.current = upper.length
+      ? upper[Math.floor(Math.random() * upper.length)].i
+      : -1;
+
+    // binary system: a star in the lower part, distinct from the pulsar
+    const lower = particlesRef.current
+      .map((p, i) => ({ p, i }))
+      .filter(({ p }, ) => p.baseY > height * 0.5);
+    const binaryPick = lower.length
+      ? lower[Math.floor(Math.random() * lower.length)].i
+      : -1;
+    binaryIdxRef.current = binaryPick === pulsarIdxRef.current ? -1 : binaryPick;
   }, []);
 
   useEffect(() => {
@@ -95,6 +132,39 @@ export default function StarBackground() {
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
 
+    // Black hole: hold mouse down on empty background to collapse spacetime
+    const handleMouseDown = (e: MouseEvent) => {
+      if (prefersReducedMotion) return;
+      const target = e.target as HTMLElement;
+      if (
+        target.closest(
+          "button, a, input, textarea, select, article, nav, svg, form, [role='dialog'], p, h1, h2, h3, h4, li, img"
+        )
+      ) {
+        return;
+      }
+      holdTimerRef.current = setTimeout(() => {
+        blackHoleRef.current.x = mouseRef.current.x;
+        blackHoleRef.current.y = mouseRef.current.y;
+        blackHoleRef.current.held = true;
+      }, 650);
+    };
+    const handleMouseUp = () => {
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+      blackHoleRef.current.held = false;
+    };
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    // terminal-summoned black hole
+    const handleSpawnBlackHole = () => {
+      if (prefersReducedMotion) return;
+      blackHoleRef.current.x = canvas.width / 2;
+      blackHoleRef.current.y = canvas.height * 0.45;
+      blackHoleRef.current.until = performance.now() + 7000;
+    };
+    window.addEventListener("spawn-blackhole", handleSpawnBlackHole);
+
     const KONAMI = [
       "ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown",
       "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight",
@@ -128,6 +198,8 @@ export default function StarBackground() {
     const CONNECTION_DIST = 130;
     const CURSOR_RADIUS = 180;
     const CURSOR_CONNECT_RADIUS = 220;
+    const BH_RADIUS = 480;
+    const BH_CORE = 13;
 
     const animate = () => {
       if (!isVisibleRef.current || !ctx || !canvas) {
@@ -137,9 +209,16 @@ export default function StarBackground() {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       time += 0.008;
+      const now = performance.now();
 
       const particles = particlesRef.current;
       const mouse = mouseRef.current;
+
+      // black hole strength ramps in/out
+      const bh = blackHoleRef.current;
+      const bhActive = bh.held || now < bh.until;
+      bh.strength += ((bhActive ? 1 : 0) - bh.strength) * 0.06;
+      const bhOn = bh.strength > 0.01;
 
       // Update particle positions
       for (let i = 0; i < particles.length; i++) {
@@ -168,16 +247,48 @@ export default function StarBackground() {
           if (p.baseY < -50) p.baseY = canvas.height + 50;
           if (p.baseY > canvas.height + 50) p.baseY = -50;
 
-          // Cursor repulsion — particles gently push away
-          const dx = p.x - mouse.x;
-          const dy = p.y - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          // Black hole gravity: radial pull + tangential swirl = accretion spiral
+          if (bhOn) {
+            const bdx = bh.x - (p.x + p.ox);
+            const bdy = bh.y - (p.y + p.oy);
+            const bdist = Math.sqrt(bdx * bdx + bdy * bdy) + 1;
+            if (bdist < BH_RADIUS) {
+              const g = Math.pow(1 - bdist / BH_RADIUS, 2) * bh.strength;
+              const ux = bdx / bdist;
+              const uy = bdy / bdist;
+              // radial infall + perpendicular swirl
+              p.ox += ux * g * 5.5 + -uy * g * 3.2;
+              p.oy += uy * g * 5.5 + ux * g * 3.2;
 
-          if (dist < CURSOR_RADIUS && dist > 0) {
-            const force = (CURSOR_RADIUS - dist) / CURSOR_RADIUS;
-            const angle = Math.atan2(dy, dx);
-            p.x += Math.cos(angle) * force * 25;
-            p.y += Math.sin(angle) * force * 25;
+              // consumed: respawn at a random edge
+              if (bdist < BH_CORE + 6) {
+                const edge = Math.floor(Math.random() * 4);
+                p.baseX = edge === 0 ? -40 : edge === 1 ? canvas.width + 40 : Math.random() * canvas.width;
+                p.baseY = edge === 2 ? -40 : edge === 3 ? canvas.height + 40 : Math.random() * canvas.height;
+                p.ox = 0;
+                p.oy = 0;
+              }
+            }
+          } else {
+            // spacetime relaxes
+            p.ox *= 0.94;
+            p.oy *= 0.94;
+          }
+          p.x += p.ox;
+          p.y += p.oy;
+
+          // Cursor repulsion — particles gently push away (suspended near a black hole)
+          if (!bhOn) {
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < CURSOR_RADIUS && dist > 0) {
+              const force = (CURSOR_RADIUS - dist) / CURSOR_RADIUS;
+              const angle = Math.atan2(dy, dx);
+              p.x += Math.cos(angle) * force * 25;
+              p.y += Math.sin(angle) * force * 25;
+            }
           }
         }
       }
@@ -195,7 +306,6 @@ export default function StarBackground() {
             if (dist < CONNECTION_DIST) {
               const alpha = (1 - dist / CONNECTION_DIST) * 0.25;
 
-              // Brighter connections near cursor
               const midX = (a.x + b.x) / 2;
               const midY = (a.y + b.y) / 2;
               const cursorDist = Math.sqrt(
@@ -210,7 +320,6 @@ export default function StarBackground() {
               ctx.beginPath();
               ctx.moveTo(a.x, a.y);
               ctx.lineTo(b.x, b.y);
-              // Blue-tinted connections, brighter near cursor
               if (cursorBoost > 0.1) {
                 ctx.strokeStyle = `rgba(96, 165, 250, ${finalAlpha})`;
               } else {
@@ -241,11 +350,36 @@ export default function StarBackground() {
         }
       }
 
+      // Supernova scheduling: rare, recurring
+      if (!prefersReducedMotion) {
+        if (nextSupernovaRef.current === 0) {
+          nextSupernovaRef.current = now + 20000 + Math.random() * 40000;
+        }
+        if (
+          supernovaRef.current.idx === -1 &&
+          now > nextSupernovaRef.current &&
+          particles.length > 0
+        ) {
+          supernovaRef.current = {
+            idx: Math.floor(Math.random() * particles.length),
+            start: now,
+          };
+        }
+      }
+      const sn = supernovaRef.current;
+      const snT = sn.idx >= 0 ? (now - sn.start) / 4200 : 2;
+      if (snT > 1 && sn.idx >= 0) {
+        supernovaRef.current = { idx: -1, start: 0 };
+        nextSupernovaRef.current = now + 60000 + Math.random() * 80000;
+      }
+
       // Draw particles
+      const konamiLeft = konamiUntilRef.current - now;
+      const konami = konamiLeft > 0 ? Math.min(konamiLeft / 1500, 1) : 0;
+
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // Particles glow brighter near cursor
         const dx = p.x - mouse.x;
         const dy = p.y - mouse.y;
         const cursorDist = Math.sqrt(dx * dx + dy * dy);
@@ -253,21 +387,92 @@ export default function StarBackground() {
           ? (1 - cursorDist / CURSOR_CONNECT_RADIUS) * 0.6
           : 0;
 
-        const finalOpacity = Math.min(p.opacity + cursorGlow, 1);
-        const finalSize = p.size + cursorGlow * 1.5;
+        let finalOpacity = Math.min(p.opacity + cursorGlow, 1);
+        let finalSize = p.size + cursorGlow * 1.5;
 
-        // Soft glow for particles near cursor
-        if (cursorGlow > 0.15) {
+        // ---- binary system: two stars orbiting a common center ----
+        if (i === binaryIdxRef.current && !prefersReducedMotion) {
+          const orbitAngle = now / 900 + p.phase;
+          const orbitR = 7;
+          const ax = p.x + Math.cos(orbitAngle) * orbitR;
+          const ay = p.y + Math.sin(orbitAngle) * orbitR * 0.55;
+          const bx = p.x - Math.cos(orbitAngle) * orbitR;
+          const by = p.y - Math.sin(orbitAngle) * orbitR * 0.55;
+
           ctx.beginPath();
-          ctx.arc(p.x, p.y, finalSize * 3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(96, 165, 250, ${cursorGlow * 0.1})`;
+          ctx.arc(ax, ay, 1.7, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity})`;
           ctx.fill();
+          ctx.beginPath();
+          ctx.arc(bx, by, 1.2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(147, 197, 253, ${finalOpacity})`;
+          ctx.fill();
+          continue;
+        }
+
+        // ---- pulsar: metronome flash with lighthouse beams ----
+        if (i === pulsarIdxRef.current && !prefersReducedMotion) {
+          const pulse = Math.pow(
+            Math.max(0, Math.sin((now / 1400) * Math.PI * 2)),
+            10
+          );
+          finalOpacity = Math.min(p.opacity + pulse * 0.9, 1);
+          finalSize = p.size + pulse * 1.6;
+
+          if (pulse > 0.05) {
+            const beamAngle = 0.9;
+            const beamLen = 26 + pulse * 30;
+            for (const dir of [1, -1]) {
+              const ex = p.x + Math.cos(beamAngle) * beamLen * dir;
+              const ey = p.y + Math.sin(beamAngle) * beamLen * dir;
+              const grad = ctx.createLinearGradient(p.x, p.y, ex, ey);
+              grad.addColorStop(0, `rgba(190, 225, 255, ${0.35 * pulse})`);
+              grad.addColorStop(1, "rgba(190, 225, 255, 0)");
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(ex, ey);
+              ctx.strokeStyle = grad;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // ---- supernova: flare, then expanding remnant ring ----
+        if (i === sn.idx && snT <= 1) {
+          if (snT < 0.25) {
+            const f = snT / 0.25;
+            const flare = 1 + f * 22;
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * flare * 2.2);
+            grad.addColorStop(0, `rgba(255, 250, 235, ${0.95})`);
+            grad.addColorStop(0.4, `rgba(255, 210, 150, ${0.5})`);
+            grad.addColorStop(1, "rgba(255, 190, 120, 0)");
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * flare * 2.2, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            finalSize = p.size * (1 + f * 5);
+            finalOpacity = 1;
+          } else {
+            const f = (snT - 0.25) / 0.75;
+            const ringR = f * 210;
+            const ringAlpha = (1 - f) * 0.5;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, ringR, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 200, 150, ${ringAlpha})`;
+            ctx.lineWidth = 1.2 * (1 - f) + 0.3;
+            ctx.stroke();
+            // faint inner shockwave
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, ringR * 0.7, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(180, 210, 255, ${ringAlpha * 0.5})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+            finalOpacity = p.opacity * (0.4 + 0.6 * f); // dims, then recovers
+          }
         }
 
         // Konami: every star becomes a ringed planet
-        const konamiLeft = konamiUntilRef.current - performance.now();
-        const konami = konamiLeft > 0 ? Math.min(konamiLeft / 1500, 1) : 0;
-
         if (konami > 0) {
           const ringAlpha = finalOpacity * 0.8 * konami;
           ctx.beginPath();
@@ -285,6 +490,14 @@ export default function StarBackground() {
           ctx.stroke();
         }
 
+        // Soft glow near cursor
+        if (cursorGlow > 0.15) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, finalSize * 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(96, 165, 250, ${cursorGlow * 0.1})`;
+          ctx.fill();
+        }
+
         // Core particle
         ctx.beginPath();
         ctx.arc(p.x, p.y, finalSize, 0, Math.PI * 2);
@@ -298,9 +511,112 @@ export default function StarBackground() {
         ctx.fill();
       }
 
-      // Shooting stars
+      // ---- black hole rendering ----
+      if (bhOn) {
+        const s = bh.strength;
+
+        // ambient glow
+        const glow = ctx.createRadialGradient(bh.x, bh.y, BH_CORE, bh.x, bh.y, 90);
+        glow.addColorStop(0, `rgba(251, 191, 36, ${0.22 * s})`);
+        glow.addColorStop(0.5, `rgba(147, 100, 250, ${0.08 * s})`);
+        glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.beginPath();
+        ctx.arc(bh.x, bh.y, 90, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
+        ctx.fill();
+
+        // accretion disk: two rotating elliptical streams
+        for (const [tilt, rx, ry, color, alpha] of [
+          [time * 1.4, 34, 10, "251, 191, 36", 0.75],
+          [time * 1.4 + 1.1, 26, 8, "96, 165, 250", 0.45],
+        ] as const) {
+          ctx.beginPath();
+          ctx.ellipse(bh.x, bh.y, rx, ry, tilt % (Math.PI * 2), 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(${color}, ${alpha * s})`;
+          ctx.lineWidth = 1.6;
+          ctx.stroke();
+        }
+
+        // event horizon
+        ctx.beginPath();
+        ctx.arc(bh.x, bh.y, BH_CORE, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 0, 0, ${Math.min(1, s * 1.4)})`;
+        ctx.fill();
+
+        // photon ring
+        ctx.beginPath();
+        ctx.arc(bh.x, bh.y, BH_CORE + 1.5, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 235, 200, ${0.8 * s})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // ---- comets: rare, slow, with curved dust tails ----
       if (!prefersReducedMotion) {
-        const now = performance.now();
+        if (nextCometRef.current === 0) {
+          nextCometRef.current = now + 15000 + Math.random() * 25000;
+        }
+        if (now > nextCometRef.current) {
+          const fromLeft = Math.random() > 0.5;
+          cometsRef.current.push({
+            x: fromLeft ? -60 : canvas.width + 60,
+            y: Math.random() * canvas.height * 0.5,
+            vx: (fromLeft ? 1 : -1) * (1.6 + Math.random() * 0.9),
+            vy: 0.4 + Math.random() * 0.5,
+            trail: [],
+          });
+          nextCometRef.current = now + 40000 + Math.random() * 50000;
+        }
+
+        const comets = cometsRef.current;
+        for (let i = comets.length - 1; i >= 0; i--) {
+          const c = comets[i];
+          c.x += c.vx;
+          c.y += c.vy;
+          c.vy += 0.002; // gentle curve
+          c.trail.unshift({ x: c.x, y: c.y });
+          if (c.trail.length > 46) c.trail.pop();
+
+          if (
+            c.x < -160 || c.x > canvas.width + 160 || c.y > canvas.height + 160
+          ) {
+            comets.splice(i, 1);
+            continue;
+          }
+
+          // dust tail
+          for (let t = c.trail.length - 1; t > 0; t--) {
+            const frac = t / c.trail.length;
+            const pt = c.trail[t];
+            ctx.beginPath();
+            ctx.arc(
+              pt.x - c.vx * frac * 3,
+              pt.y - c.vy * frac * 3,
+              (1 - frac) * 2.2 + 0.3,
+              0,
+              Math.PI * 2
+            );
+            ctx.fillStyle = `rgba(170, 215, 255, ${(1 - frac) * 0.22})`;
+            ctx.fill();
+          }
+
+          // nucleus + coma
+          const coma = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 9);
+          coma.addColorStop(0, "rgba(235, 245, 255, 0.9)");
+          coma.addColorStop(1, "rgba(170, 215, 255, 0)");
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, 9, 0, Math.PI * 2);
+          ctx.fillStyle = coma;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+          ctx.fill();
+        }
+      }
+
+      // ---- shooting stars ----
+      if (!prefersReducedMotion) {
         if (nextShootingStarRef.current === 0) {
           nextShootingStarRef.current = now + 1500 + Math.random() * 2500;
         }
@@ -337,7 +653,6 @@ export default function StarBackground() {
             continue;
           }
 
-          // fade in fast, fade out toward end of life
           const t = s.life / s.maxLife;
           const alpha = t < 0.15 ? t / 0.15 : 1 - (t - 0.15) / 0.85;
 
@@ -355,7 +670,6 @@ export default function StarBackground() {
           ctx.lineWidth = 1.4;
           ctx.stroke();
 
-          // bright head
           ctx.beginPath();
           ctx.arc(s.x, s.y, 1.6, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
@@ -370,10 +684,14 @@ export default function StarBackground() {
 
     return () => {
       cancelAnimationFrame(animFrameRef.current);
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", handleMouse);
       window.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("spawn-blackhole", handleSpawnBlackHole);
       window.removeEventListener("keydown", handleKonami);
       document.removeEventListener("visibilitychange", handleVisibility);
     };

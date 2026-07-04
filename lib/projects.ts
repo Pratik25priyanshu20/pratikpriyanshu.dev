@@ -230,7 +230,7 @@ export const projects: Project[] = [
       { label: "AUROC (Bloom Prediction)", value: "0.814", note: "monolithic baseline across 7 German lakes" },
       { label: "Autonomous AI Agents", value: "5" },
       { label: "Data Modalities Fused", value: "4", note: "Sentinel-2 satellite, in-situ sensors, DWD weather, visual" },
-      { label: "Unit Tests", value: "112+" },
+      { label: "German Lakes Evaluated", value: "7" },
     ],
     learnings: [
       "Satellite-only features (5 variables) outperformed all 14 features combined (AUROC 0.850 vs 0.794): modality quality matters more than quantity",
@@ -347,7 +347,7 @@ export const projects: Project[] = [
       { label: "Specialized Agents", value: "9" },
       { label: "Pipeline Variants", value: "3" },
       { label: "Test Scenarios", value: "30" },
-      { label: "Passing Tests", value: "244" },
+      { label: "Accident Categories", value: "6", note: "rear-end, side, head-on, intersection, pedestrian, single-vehicle" },
     ],
     learnings: [
       "RAG augmentation with legal statutes significantly reduces hallucinated legal references compared to pure LLM inference",
@@ -405,7 +405,7 @@ export const projects: Project[] = [
       "Developed evaluation harness to measure hallucination mitigation",
     ],
     metrics: [
-      { label: "Unit Tests (Pillar 2)", value: "29+" },
+      { label: "Contradiction Penalty Cap", value: "0.4", note: "confidence penalty for conflicting evidence sources" },
       { label: "Hallucination Mitigation", value: "4-Layer" },
       { label: "Avg Confidence", value: "0.78" },
       { label: "Ungrounded Responses", value: "0%" },

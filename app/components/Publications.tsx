@@ -129,7 +129,7 @@ export default function Publications() {
                         className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-200 hover:opacity-80"
                         style={{ color: pub.color }}
                       >
-                        {link.label === "Paper" ? (
+                        {link.label === "Paper" || link.label === "arXiv" ? (
                           <svg
                             width="16"
                             height="16"
@@ -142,6 +142,21 @@ export default function Publications() {
                             <polyline points="14 2 14 8 20 8" />
                             <line x1="16" y1="13" x2="8" y2="13" />
                             <line x1="16" y1="17" x2="8" y2="17" />
+                          </svg>
+                        ) : link.label === "PyPI" ? (
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                            <line x1="12" y1="22.08" x2="12" y2="12" />
                           </svg>
                         ) : (
                           <svg

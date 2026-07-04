@@ -86,7 +86,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
       </div>
 
       {/* Description — always visible */}
-      <p className="text-text-secondary leading-relaxed mb-6" data-yolo="evidence">
+      <p className="text-text-secondary leading-relaxed mb-6">
         {project.description}
       </p>
 
@@ -127,7 +127,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
       </div>
 
       {/* Tech Stack — always visible */}
-      <div className="flex flex-wrap gap-2 mb-6" data-yolo="tech_stack">
+      <div className="flex flex-wrap gap-2 mb-6">
         {project.techStack.map((tech) => (
           <span
             key={tech}

@@ -49,14 +49,22 @@ export default function Publications() {
                         backgroundColor:
                           pub.status === "published"
                             ? "rgba(16, 185, 129, 0.12)"
-                            : "rgba(234, 179, 8, 0.12)",
+                            : pub.status === "preprint"
+                              ? "rgba(249, 115, 22, 0.12)"
+                              : "rgba(234, 179, 8, 0.12)",
                         color:
-                          pub.status === "published" ? "#10b981" : "#eab308",
+                          pub.status === "published"
+                            ? "#10b981"
+                            : pub.status === "preprint"
+                              ? "#f97316"
+                              : "#eab308",
                       }}
                     >
                       {pub.status === "published"
                         ? "Published"
-                        : "Under Review"}
+                        : pub.status === "preprint"
+                          ? "Preprint"
+                          : "Under Review"}
                     </span>
                     <span className="text-text-muted text-xs">{pub.year}</span>
                   </div>

@@ -73,7 +73,7 @@ export default function Hero() {
             >
               <span className="text-accent-purple font-medium">Quantum ML</span>
               <span className="text-text-muted">&bull;</span>
-              <span className="text-accent-blue-light font-medium">Trustworthy AI</span>
+              <span className="text-accent-yellow font-medium">Scientific ML</span>
               <span className="text-text-muted">&bull;</span>
               <span className="text-accent-cyan font-medium">NLP &amp; RAG</span>
               <span className="text-text-muted">&bull;</span>

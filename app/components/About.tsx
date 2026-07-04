@@ -41,20 +41,20 @@ export default function About() {
                 hybrid quantum-classical evaluation
               </span>
               ,{" "}
-              <span className="text-accent-red font-medium">
-                trustworthy legal AI
-              </span>
-              , and{" "}
+              <span className="text-accent-yellow font-medium">
+                scientific machine learning
+              </span>{" "}
+              (exoplanet detection, Earth observation), and{" "}
               <span className="text-accent-cyan font-medium">
                 multimodal coherence evaluation
               </span>
-              {" "}&mdash; but the consistent thread is methodological depth:
-              ablation studies, uncertainty quantification, statistical rigor,
-              and honest reporting of null results.
+              . The consistent thread is methodological depth: uncertainty
+              quantification, conformal prediction, statistical rigor, and
+              honest reporting of null results.
             </p>
             <p>
               I&apos;m driven by the question of how we know what we claim to
-              know about ML systems &mdash; designing evaluation protocols that
+              know about ML systems. I design evaluation protocols that
               separate genuine capability from artifacts of experimental setup.
             </p>
             <p>
@@ -62,7 +62,7 @@ export default function About() {
               <span className="text-text-primary font-medium">
                 M.Sc. in Applied Data Science
               </span>{" "}
-              at SRH Heidelberg (Grade: 1.8), and seeking PhD positions in
+              at SRH Heidelberg (Grade: 1.6), and seeking PhD positions in
               machine learning where reproducibility, principled evaluation, and
               methodological rigour are central values.
             </p>

@@ -245,8 +245,26 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
         )}
       </AnimatePresence>
 
+      {/* pip install chip */}
+      {project.pipInstall && (
+        <div className="pt-4 border-t border-border/50 mb-3">
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md font-mono text-xs bg-surface-light/60 border"
+            style={{
+              borderColor: `${project.color}30`,
+              color: `${project.color}dd`,
+            }}
+          >
+            <span className="text-text-muted select-none">$</span>
+            <span>{project.pipInstall}</span>
+          </div>
+        </div>
+      )}
+
       {/* Links */}
-      <div className="flex gap-3 pt-4 border-t border-border/50">
+      <div
+        className={`flex gap-3 ${project.pipInstall ? "pt-2" : "pt-4 border-t border-border/50"}`}
+      >
         {project.links.map((link) => (
           <a
             key={link.label}

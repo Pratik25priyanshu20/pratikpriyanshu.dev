@@ -133,7 +133,7 @@ export const milestones: Milestone[] = [
 
 export const yearTicks = [
   { x: 0.04, label: "2023" },
-  { x: 0.15, label: "2024" },
-  { x: 0.47, label: "2025" },
-  { x: 0.8, label: "2026" },
+  { x: 0.13, label: "2024" },
+  { x: 0.335, label: "2025" },
+  { x: 0.6, label: "2026" },
 ];

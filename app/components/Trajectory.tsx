@@ -23,9 +23,9 @@ function mulberry32(seed: number) {
 
 const toPx = (frac: number) => X0 + frac * (X1 - X0);
 
-/** 4-point sparkle star */
+/** 4-point sparkle star, sharper */
 function starPath(cx: number, cy: number, o: number) {
-  const i = o * 0.3;
+  const i = o * 0.24;
   return [
     `M ${cx} ${cy - o}`,
     `L ${cx + i} ${cy - i}`,
@@ -56,13 +56,32 @@ function buildCurve() {
     .map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`)
     .join(" ");
   const area = `${line} L${X1},${BASE + 20} L${X0},${BASE + 20} Z`;
-  return { line, area };
+  // sample the actual curve height at any x so markers sit exactly on peaks
+  const yAt = (x: number) => {
+    const idx = Math.round(((x - X0) / (X1 - X0)) * (N - 1));
+    return pts[Math.max(0, Math.min(N - 1, idx))][1];
+  };
+  return { line, area, yAt };
+}
+
+/** point on a quadratic bezier */
+function qBezier(
+  t: number,
+  p0: [number, number],
+  p1: [number, number],
+  p2: [number, number]
+): [number, number] {
+  const u = 1 - t;
+  return [
+    u * u * p0[0] + 2 * u * t * p1[0] + t * t * p2[0],
+    u * u * p0[1] + 2 * u * t * p1[1] + t * t * p2[1],
+  ];
 }
 
 export default function Trajectory() {
   const prefersReducedMotion = useReducedMotion();
   const [active, setActive] = useState<string | null>(null);
-  const { line, area } = useMemo(buildCurve, []);
+  const { line, area, yAt } = useMemo(buildCurve, []);
 
   const activeMilestone = milestones.find((m) => m.id === active);
 
@@ -194,7 +213,7 @@ export default function Trajectory() {
             {/* stems + peak glows */}
             {milestones.map((m) => {
               const mx = toPx(m.x);
-              const my = BASE - m.h - 3;
+              const my = yAt(mx) - 3;
               const isActive = active === m.id;
               const big = m.h >= 90;
               return (
@@ -236,18 +255,29 @@ export default function Trajectory() {
               transition={{ duration: 2.6, ease: "easeInOut" }}
             />
 
-            {/* dotted rise into the future */}
-            <motion.path
-              d={`M ${X1} ${BASE} Q ${X1 + 34} ${BASE - 12} ${X1 + 58} ${BASE - 46}`}
-              stroke="#facc15"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeDasharray="0.5 9"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 0.9 }}
-              viewport={{ once: true }}
-              transition={{ delay: prefersReducedMotion ? 0.3 : 2.7, duration: 0.9 }}
-            />
+            {/* dotted rise into the future — explicit dots along a curve */}
+            {[0.12, 0.3, 0.48, 0.66, 0.84].map((t, k) => {
+              const p0: [number, number] = [X1, yAt(X1)];
+              const p1: [number, number] = [X1 + 40, yAt(X1) - 14];
+              const p2: [number, number] = [X1 + 62, BASE - 50];
+              const [dx, dy] = qBezier(t, p0, p1, p2);
+              return (
+                <motion.circle
+                  key={k}
+                  cx={dx}
+                  cy={dy}
+                  r={1.5 + t * 1.8}
+                  fill="#facc15"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 0.4 + t * 0.55 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    delay: prefersReducedMotion ? 0.3 : 2.6 + k * 0.16,
+                    duration: 0.4,
+                  }}
+                />
+              );
+            })}
 
             {/* the PhD star */}
             <motion.g
@@ -297,9 +327,9 @@ export default function Trajectory() {
             {/* star markers + always-visible labels */}
             {milestones.map((m) => {
               const mx = toPx(m.x);
-              const my = BASE - m.h - 3;
+              const my = yAt(mx) - 3;
               const isActive = active === m.id;
-              const starR = 5.5 + m.h * 0.055;
+              const starR = 4 + m.h * 0.04;
               return (
                 <g key={m.id}>
                   <rect
@@ -324,11 +354,32 @@ export default function Trajectory() {
                     }}
                     style={{ transformOrigin: `${mx}px ${my}px` }}
                   >
+                    {/* cross rays */}
+                    <line
+                      x1={mx - starR * 1.9}
+                      y1={my}
+                      x2={mx + starR * 1.9}
+                      y2={my}
+                      stroke={isActive ? "#ffffff" : "#e8e2d0"}
+                      strokeOpacity={isActive ? 0.7 : 0.35}
+                      strokeWidth="0.6"
+                      style={{ transition: "stroke-opacity 0.2s" }}
+                    />
+                    <line
+                      x1={mx}
+                      y1={my - starR * 1.9}
+                      x2={mx}
+                      y2={my + starR * 1.9}
+                      stroke={isActive ? "#ffffff" : "#e8e2d0"}
+                      strokeOpacity={isActive ? 0.7 : 0.35}
+                      strokeWidth="0.6"
+                      style={{ transition: "stroke-opacity 0.2s" }}
+                    />
                     {!prefersReducedMotion ? (
                       <motion.path
                         d={starPath(mx, my, starR)}
                         fill={isActive ? "#ffffff" : "#f2ead6"}
-                        animate={{ opacity: [0.95, 0.6, 0.95] }}
+                        animate={{ opacity: [1, 0.7, 1] }}
                         transition={{
                           duration: 2 + (m.x * 7) % 2.4,
                           repeat: Infinity,
@@ -338,13 +389,21 @@ export default function Trajectory() {
                         style={{
                           filter: isActive
                             ? "drop-shadow(0 0 8px #facc15)"
-                            : "drop-shadow(0 0 3px rgba(220, 230, 255, 0.5))",
+                            : "drop-shadow(0 0 4px rgba(230, 238, 255, 0.7))",
                           transition: "fill 0.2s",
                         }}
                       />
                     ) : (
                       <path d={starPath(mx, my, starR)} fill="#f2ead6" />
                     )}
+                    {/* bright core */}
+                    <circle
+                      cx={mx}
+                      cy={my}
+                      r="1.1"
+                      fill="#ffffff"
+                      opacity={isActive ? 1 : 0.9}
+                    />
                   </motion.g>
                   {/* always-visible event label */}
                   <motion.text

@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useMemo, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import { milestones, yearTicks } from "@/lib/trajectory";
 
 const W = 1000;
@@ -81,6 +81,8 @@ function qBezier(
 export default function Trajectory() {
   const prefersReducedMotion = useReducedMotion();
   const [active, setActive] = useState<string | null>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(chartRef, { once: true, margin: "-80px" });
   const { line, area, yAt } = useMemo(buildCurve, []);
 
   const activeMilestone = milestones.find((m) => m.id === active);
@@ -105,6 +107,7 @@ export default function Trajectory() {
 
         {/* Desktop: the trajectory light curve */}
         <motion.div
+          ref={chartRef}
           className="relative hidden md:block"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -227,8 +230,7 @@ export default function Trajectory() {
                     strokeWidth="0.7"
                     strokeDasharray="2 5"
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: isActive ? 0.7 : 0.3 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: inView ? (isActive ? 0.7 : 0.3) : 0 }}
                     transition={{ delay: prefersReducedMotion ? 0.1 : 0.4 + m.x * 2 }}
                   />
                   <circle
@@ -256,25 +258,25 @@ export default function Trajectory() {
             />
 
             {/* dotted rise into the future — explicit dots along a curve */}
-            {[0.12, 0.3, 0.48, 0.66, 0.84].map((t, k) => {
-              const p0: [number, number] = [X1, yAt(X1)];
-              const p1: [number, number] = [X1 + 40, yAt(X1) - 14];
-              const p2: [number, number] = [X1 + 62, BASE - 50];
+            {[0.08, 0.22, 0.37, 0.52, 0.67, 0.82, 0.95].map((t, k) => {
+              const p0: [number, number] = [X1, yAt(X1) - 2];
+              const p1: [number, number] = [X1 + 42, yAt(X1) - 16];
+              const p2: [number, number] = [X1 + 64, BASE - 66];
               const [dx, dy] = qBezier(t, p0, p1, p2);
               return (
                 <motion.circle
                   key={k}
                   cx={dx}
                   cy={dy}
-                  r={1.5 + t * 1.8}
-                  fill="#facc15"
+                  r={2 + t * 2.4}
+                  fill="#fbbf24"
                   initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 0.4 + t * 0.55 }}
-                  viewport={{ once: true }}
+                  animate={{ opacity: inView ? 0.55 + t * 0.45 : 0 }}
                   transition={{
-                    delay: prefersReducedMotion ? 0.3 : 2.6 + k * 0.16,
+                    delay: prefersReducedMotion ? 0.3 : 2.5 + k * 0.15,
                     duration: 0.4,
                   }}
+                  style={{ filter: "drop-shadow(0 0 3px rgba(250, 204, 21, 0.8))" }}
                 />
               );
             })}
@@ -282,38 +284,46 @@ export default function Trajectory() {
             {/* the PhD star */}
             <motion.g
               initial={{ opacity: 0, scale: 0 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
+              animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
               transition={{
-                delay: prefersReducedMotion ? 0.4 : 3.3,
+                delay: prefersReducedMotion ? 0.4 : 3.6,
                 type: "spring",
                 stiffness: 260,
                 damping: 16,
               }}
-              style={{ transformOrigin: `${X1 + 72}px ${BASE - 62}px` }}
+              style={{ transformOrigin: `${X1 + 76}px ${BASE - 80}px` }}
             >
               <circle
-                cx={X1 + 72}
-                cy={BASE - 62}
-                r="20"
+                cx={X1 + 76}
+                cy={BASE - 80}
+                r="22"
                 fill="#facc15"
-                opacity="0.18"
+                opacity="0.2"
                 style={{ filter: "blur(8px)" }}
+              />
+              <path
+                d={starPath(X1 + 76, BASE - 80, 5.5)}
+                transform={`rotate(45 ${X1 + 76} ${BASE - 80})`}
+                fill="#fde68a"
+                opacity="0.75"
               />
               {!prefersReducedMotion ? (
                 <motion.path
-                  d={starPath(X1 + 72, BASE - 62, 11)}
+                  d={starPath(X1 + 76, BASE - 80, 11)}
                   fill="#fde68a"
                   animate={{ opacity: [1, 0.55, 1], scale: [1, 1.18, 1] }}
                   transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-                  style={{ transformOrigin: `${X1 + 72}px ${BASE - 62}px` }}
+                  style={{
+                    transformOrigin: `${X1 + 76}px ${BASE - 80}px`,
+                    filter: "drop-shadow(0 0 6px rgba(250, 204, 21, 0.9))",
+                  }}
                 />
               ) : (
-                <path d={starPath(X1 + 72, BASE - 62, 11)} fill="#fde68a" />
+                <path d={starPath(X1 + 76, BASE - 80, 11)} fill="#fde68a" />
               )}
               <text
-                x={X1 + 72}
-                y={BASE - 84}
+                x={X1 + 76}
+                y={BASE - 102}
                 textAnchor="middle"
                 fontSize="15"
                 fontFamily="var(--font-space-grotesk), sans-serif"
@@ -344,8 +354,7 @@ export default function Trajectory() {
                   />
                   <motion.g
                     initial={{ opacity: 0, scale: 0 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
+                    animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
                     transition={{
                       delay: prefersReducedMotion ? 0.2 : 0.5 + m.x * 2.2,
                       type: "spring",
@@ -374,6 +383,14 @@ export default function Trajectory() {
                       strokeOpacity={isActive ? 0.7 : 0.35}
                       strokeWidth="0.6"
                       style={{ transition: "stroke-opacity 0.2s" }}
+                    />
+                    {/* diagonal secondary sparkle */}
+                    <path
+                      d={starPath(mx, my, starR * 0.5)}
+                      transform={`rotate(45 ${mx} ${my})`}
+                      fill={isActive ? "#ffffff" : "#e8e2d0"}
+                      opacity={isActive ? 0.9 : 0.6}
+                      style={{ transition: "opacity 0.2s" }}
                     />
                     {!prefersReducedMotion ? (
                       <motion.path
@@ -415,8 +432,7 @@ export default function Trajectory() {
                     fontWeight={isActive ? 700 : 500}
                     fill={isActive ? "#ffffff" : "#c7cdd8"}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: isActive ? 1 : 0.8 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: inView ? (isActive ? 1 : 0.8) : 0 }}
                     transition={{ delay: prefersReducedMotion ? 0.2 : 0.7 + m.x * 2.2 }}
                     style={{ cursor: "pointer", transition: "fill 0.2s" }}
                     onMouseEnter={() => setActive(m.id)}

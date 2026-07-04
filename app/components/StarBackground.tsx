@@ -83,7 +83,7 @@ export default function StarBackground() {
       .map((p, i) => ({ p, i }))
       .filter(({ p }) => p.depth > 0.5)
       .sort(() => Math.random() - 0.5);
-    pulsarsRef.current = bright.slice(0, 3).map(({ p, i }, k) => {
+    pulsarsRef.current = bright.slice(0, 2).map(({ p, i }, k) => {
       p.size = Math.max(p.size, 1.9);
       p.opacity = Math.max(p.opacity, 0.55);
       return {

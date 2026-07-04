@@ -24,13 +24,13 @@ const SITE_URL = "https://pratikpriyanshu-dev.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Pratik Priyanshu | ML Researcher | Quantum ML, Trustworthy AI & Evaluation",
+  title: "Pratik Priyanshu | ML Researcher | Quantum ML, Scientific ML & Evaluation",
   description:
-    "ML Researcher focused on rigorous evaluation frameworks across Quantum ML, Trustworthy AI, NLP & RAG, and Multimodal Evaluation. Seeking PhD positions.",
+    "ML Researcher focused on rigorous evaluation frameworks across Quantum ML, Scientific ML, NLP & RAG, and Multimodal Evaluation. Seeking PhD positions.",
   openGraph: {
-    title: "Pratik Priyanshu | ML Researcher | Quantum ML, Trustworthy AI & Evaluation",
+    title: "Pratik Priyanshu | ML Researcher | Quantum ML, Scientific ML & Evaluation",
     description:
-      "ML Researcher focused on rigorous evaluation frameworks across Quantum ML, Trustworthy AI, NLP & RAG, and Multimodal Evaluation. Seeking PhD positions.",
+      "ML Researcher focused on rigorous evaluation frameworks across Quantum ML, Scientific ML, NLP & RAG, and Multimodal Evaluation. Seeking PhD positions.",
     url: SITE_URL,
     siteName: "Pratik Priyanshu",
     images: [
@@ -45,9 +45,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pratik Priyanshu | ML Researcher | Quantum ML, Trustworthy AI & Evaluation",
+    title: "Pratik Priyanshu | ML Researcher | Quantum ML, Scientific ML & Evaluation",
     description:
-      "ML Researcher focused on rigorous evaluation frameworks across Quantum ML, Trustworthy AI, NLP & RAG, and Multimodal Evaluation. Seeking PhD positions.",
+      "ML Researcher focused on rigorous evaluation frameworks across Quantum ML, Scientific ML, NLP & RAG, and Multimodal Evaluation. Seeking PhD positions.",
     images: ["/og-image.png"],
   },
 };

@@ -253,7 +253,7 @@ export default function StarBackground() {
       if (!prefersReducedMotion) {
         const now = performance.now();
         if (nextShootingStarRef.current === 0) {
-          nextShootingStarRef.current = now + 4000 + Math.random() * 5000;
+          nextShootingStarRef.current = now + 1500 + Math.random() * 2500;
         }
         if (now > nextShootingStarRef.current) {
           const goingRight = Math.random() > 0.5;
@@ -269,7 +269,7 @@ export default function StarBackground() {
             life: 0,
             maxLife: 45 + Math.random() * 25,
           });
-          nextShootingStarRef.current = now + 8000 + Math.random() * 10000;
+          nextShootingStarRef.current = now + 3500 + Math.random() * 5000;
         }
 
         const stars = shootingStarsRef.current;

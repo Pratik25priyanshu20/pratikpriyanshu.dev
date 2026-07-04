@@ -1,4 +1,5 @@
 import StarBackground from "./components/StarBackground";
+import ConsoleGreeting from "./components/ConsoleGreeting";
 import Navigation from "./components/Navigation";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -8,11 +9,16 @@ import Blog from "./components/Blog";
 import Skills from "./components/Skills";
 import Certifications from "./components/Certifications";
 import Contact from "./components/Contact";
+import Footer from "./components/Footer";
+import QuantumDivider from "./components/QuantumDivider";
+import Terminal from "./components/Terminal";
 
 export default function Home() {
   return (
     <>
       <StarBackground />
+      <ConsoleGreeting />
+      <Terminal />
       <div className="noise-overlay" aria-hidden="true" />
       <Navigation />
       <main id="main-content">
@@ -21,7 +27,7 @@ export default function Home() {
         <About />
         <div className="section-divider" />
         <Publications />
-        <div className="section-divider" />
+        <QuantumDivider />
         <Projects />
         <div className="section-divider" />
         <Blog />
@@ -31,6 +37,7 @@ export default function Home() {
         <Certifications />
         <div className="section-divider" />
         <Contact />
+        <Footer />
       </main>
     </>
   );

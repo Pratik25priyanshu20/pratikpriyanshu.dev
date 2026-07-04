@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Project } from "@/lib/projects";
 import CountUp from "./CountUp";
+import CardEffect from "./CardEffects";
 
 interface ProjectCardProps {
   project: Project;
@@ -29,6 +30,8 @@ function ChevronIcon({ open }: { open: boolean }) {
 export default function ProjectCard({ project, index }: ProjectCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const cardRef = useRef<HTMLElement | null>(null);
 
   const copyPipInstall = async () => {
     if (!project.pipInstall) return;
@@ -43,11 +46,14 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
 
   return (
     <motion.article
+      ref={cardRef}
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
       className="card group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       {/* Color accent bar */}
       <div
@@ -55,8 +61,11 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
         style={{ backgroundColor: project.color }}
       />
 
+      {/* Project-specific physics effect */}
+      <CardEffect projectId={project.id} active={hovered} cardRef={cardRef} />
+
       {/* Header */}
-      <div className="mb-6 pt-2">
+      <div className="mb-6 pt-2" data-yolo="title">
         <div className="flex items-center gap-3 mb-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shrink-0"
@@ -77,17 +86,17 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
       </div>
 
       {/* Description — always visible */}
-      <p className="text-text-secondary leading-relaxed mb-6">
+      <p className="text-text-secondary leading-relaxed mb-6" data-yolo="evidence">
         {project.description}
       </p>
 
       {/* Metrics — always visible for quick scanning */}
-      <div className="mb-6">
+      <div className="mb-6" data-yolo="metrics">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {project.metrics.map((metric) => (
             <div
               key={metric.label}
-              className="bg-surface-light/50 border border-border/50 rounded-xl p-3 text-center transition-all duration-300"
+              className="group/metric relative bg-surface-light/50 border border-border/50 rounded-xl p-3 text-center transition-all duration-300"
               style={{ borderColor: undefined }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = `${project.color}40`;
@@ -103,13 +112,22 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 <CountUp value={metric.value} />
               </div>
               <div className="text-xs text-text-muted">{metric.label}</div>
+              {metric.note && (
+                <div
+                  className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-20 w-max max-w-[220px] px-3 py-2 rounded-lg border bg-surface/95 backdrop-blur-sm text-[11px] leading-snug text-text-secondary font-mono opacity-0 translate-y-1 group-hover/metric:opacity-100 group-hover/metric:translate-y-0 transition-all duration-200"
+                  style={{ borderColor: `${project.color}35` }}
+                  role="tooltip"
+                >
+                  {metric.note}
+                </div>
+              )}
             </div>
           ))}
         </div>
       </div>
 
       {/* Tech Stack — always visible */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6" data-yolo="tech_stack">
         {project.techStack.map((tech) => (
           <span
             key={tech}

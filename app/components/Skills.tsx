@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { skillCategories } from "@/lib/skills";
+import SkillConstellation from "./SkillConstellation";
 
 const chipVariants = {
   hidden: { opacity: 0, scale: 0.8, y: 10 },
@@ -36,7 +37,18 @@ export default function Skills() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Desktop: constellation star chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+        >
+          <SkillConstellation />
+        </motion.div>
+
+        {/* Mobile / tablet: chip grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:hidden">
           {skillCategories.map((category, catIndex) => (
             <motion.div
               key={category.title}

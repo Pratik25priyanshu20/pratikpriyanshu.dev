@@ -6,7 +6,7 @@ export interface Project {
   challenge: string;
   approach: string;
   implementation: string[];
-  metrics: { label: string; value: string }[];
+  metrics: { label: string; value: string; note?: string }[];
   learnings: string[];
   researchContribution?: string[];
   whyThisMatters?: string;
@@ -51,8 +51,8 @@ export const projects: Project[] = [
     metrics: [
       { label: "Model Families", value: "7" },
       { label: "Datasets", value: "4" },
-      { label: "Controlled Runs", value: "280+" },
-      { label: "PyPI Release", value: "v0.3.0" },
+      { label: "Controlled Runs", value: "280+", note: "7 models \u00d7 4 datasets \u00d7 2 splits \u00d7 5 seeds" },
+      { label: "PyPI Release", value: "v0.3.0", note: "pip install hnep \u2014 calibrated thresholds, cluster-aware bootstrap" },
     ],
     learnings: [
       "Surrogation and interventions can give divergent conclusions on the same dataset \u2014 convergent validity is not optional",
@@ -109,10 +109,10 @@ export const projects: Project[] = [
       "Zero-shot cross-mission inference pipeline for TESS 2-minute cadence and PLATO 25-second cadence",
     ],
     metrics: [
-      { label: "Kepler DR25 AUC", value: "0.938" },
-      { label: "New Candidates", value: "179" },
-      { label: "TESS Zero-Shot", value: "47 / 47" },
-      { label: "Conformal Coverage", value: "95.9%" },
+      { label: "Kepler DR25 AUC", value: "0.938", note: "XGBoost on 21 world-model features, star-level splits" },
+      { label: "New Candidates", value: "179", note: "blind search of 3,737 Kepler stars at 4\u03c3" },
+      { label: "TESS Zero-Shot", value: "47 / 47", note: "PLATO LOPS2 field, no retraining or fine-tuning" },
+      { label: "Conformal Coverage", value: "95.9%", note: "split conformal, 95% nominal target" },
     ],
     learnings: [
       "Detection and classification are distinct problems: hand-crafted scoring on world-model residuals achieved AUC 0.36 because eclipsing binaries produce deeper residuals than planets \u2014 a learned classifier on top is essential",
@@ -171,9 +171,9 @@ export const projects: Project[] = [
       "Full statistical suite: Wilcoxon, Shapiro-Wilk, Holm-Bonferroni, bootstrap BCa CIs, power analysis",
     ],
     metrics: [
-      { label: "Human Correlation", value: "\u03C1 = 0.785" },
-      { label: "ICC(3,k)", value: "0.872" },
-      { label: "Controlled Runs", value: "630+" },
+      { label: "Human Correlation", value: "\u03C1 = 0.785", note: "Spearman, p < 10\u207B\u2076, 100 human-annotated samples" },
+      { label: "ICC(3,k)", value: "0.872", note: "inter-rater reliability, leave-one-out \u03c1 = 0.749" },
+      { label: "Controlled Runs", value: "630+", note: "prompts \u00d7 seeds \u00d7 perturbation conditions" },
       { label: "Statistical Significance", value: "p < 10\u207B\u2076" },
     ],
     learnings: [
@@ -227,7 +227,7 @@ export const projects: Project[] = [
       "Ran controlled experiments: monolithic baselines (AUROC 0.814), modality ablation, feature dropout robustness, and agentic vs monolithic comparison across 7 German lakes",
     ],
     metrics: [
-      { label: "AUROC (Bloom Prediction)", value: "0.814" },
+      { label: "AUROC (Bloom Prediction)", value: "0.814", note: "monolithic baseline across 7 German lakes" },
       { label: "Autonomous AI Agents", value: "5" },
       { label: "Lines of Python", value: "14,000+" },
       { label: "Unit Tests", value: "112+" },

@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { publications } from "@/lib/publications";
+import { toBibtex } from "@/lib/bibtex";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -9,6 +11,19 @@ const fadeInUp = {
 };
 
 export default function Publications() {
+  const [citedId, setCitedId] = useState<string | null>(null);
+
+  const copyCitation = async (pubId: string) => {
+    const pub = publications.find((p) => p.id === pubId);
+    if (!pub) return;
+    try {
+      await navigator.clipboard.writeText(toBibtex(pub));
+      setCitedId(pubId);
+      setTimeout(() => setCitedId(null), 2000);
+    } catch {
+      // clipboard unavailable — ignore
+    }
+  };
   return (
     <section id="publications" className="py-section" aria-label="Publications">
       <div className="section-container">
@@ -141,6 +156,45 @@ export default function Publications() {
                         {link.label}
                       </a>
                     ))}
+                    <button
+                      onClick={() => copyCitation(pub.id)}
+                      className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-200 hover:opacity-80 cursor-pointer"
+                      style={{ color: pub.color }}
+                      aria-label={`Copy BibTeX citation for ${pub.title}`}
+                      title="Copy BibTeX"
+                    >
+                      {citedId === pub.id ? (
+                        <>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            aria-hidden="true"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            aria-hidden="true"
+                          >
+                            <path d="M17 6.1H3M21 12.1H3M15.1 18H3" />
+                          </svg>
+                          Cite
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </motion.div>

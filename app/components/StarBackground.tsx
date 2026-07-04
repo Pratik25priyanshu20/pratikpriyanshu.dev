@@ -27,14 +27,6 @@ interface ShootingStar {
   maxLife: number;
 }
 
-interface Comet {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  trail: { x: number; y: number }[];
-}
-
 interface Flash {
   x: number;
   y: number;
@@ -45,17 +37,15 @@ export default function StarBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const shootingStarsRef = useRef<ShootingStar[]>([]);
-  const cometsRef = useRef<Comet[]>([]);
   const flashesRef = useRef<Flash[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const scrollRef = useRef(0);
   const animFrameRef = useRef<number>(0);
   const isVisibleRef = useRef(true);
   const nextShootingStarRef = useRef(0);
-  const nextCometRef = useRef(0);
   const konamiUntilRef = useRef(0);
   const konamiProgressRef = useRef(0);
-  const pulsarIdxRef = useRef(-1);
+  const pulsarsRef = useRef<{ idx: number; period: number; angle: number }[]>([]);
   const binaryIdxRef = useRef(-1);
   const supernovaRef = useRef({ idx: -1, start: 0 });
   const nextSupernovaRef = useRef(0);
@@ -87,27 +77,31 @@ export default function StarBackground() {
       };
     });
 
-    // pulsar: a bright star in the upper part of the field
-    const upper = particlesRef.current
+    // pulsars: three bright stars scattered across the field, each with its
+    // own rotation period and beam angle
+    const bright = particlesRef.current
       .map((p, i) => ({ p, i }))
-      .filter(({ p }) => p.baseY < height * 0.45 && p.depth > 0.5);
-    pulsarIdxRef.current = upper.length
-      ? upper[Math.floor(Math.random() * upper.length)].i
-      : 0;
-    const pulsar = particlesRef.current[pulsarIdxRef.current];
-    if (pulsar) {
-      pulsar.size = Math.max(pulsar.size, 1.9);
-      pulsar.opacity = Math.max(pulsar.opacity, 0.55);
-    }
+      .filter(({ p }) => p.depth > 0.5)
+      .sort(() => Math.random() - 0.5);
+    pulsarsRef.current = bright.slice(0, 3).map(({ p, i }, k) => {
+      p.size = Math.max(p.size, 1.9);
+      p.opacity = Math.max(p.opacity, 0.55);
+      return {
+        idx: i,
+        period: 1100 + k * 420 + Math.random() * 200,
+        angle: 0.4 + k * 1.1,
+      };
+    });
 
-    // binary system: a star in the lower part, distinct from the pulsar
+    // binary system: a star in the lower part, distinct from the pulsars
+    const pulsarIdxs = new Set(pulsarsRef.current.map((m) => m.idx));
     const lower = particlesRef.current
       .map((p, i) => ({ p, i }))
-      .filter(({ p }) => p.baseY > height * 0.5 && p.depth > 0.45);
-    const binaryPick = lower.length
+      .filter(({ p }, ) => p.baseY > height * 0.5 && p.depth > 0.45)
+      .filter(({ i }) => !pulsarIdxs.has(i));
+    binaryIdxRef.current = lower.length
       ? lower[Math.floor(Math.random() * lower.length)].i
       : -1;
-    binaryIdxRef.current = binaryPick === pulsarIdxRef.current ? -1 : binaryPick;
     const binary = particlesRef.current[binaryIdxRef.current];
     if (binary) binary.opacity = Math.max(binary.opacity, 0.6);
   }, []);
@@ -443,21 +437,23 @@ export default function StarBackground() {
           continue;
         }
 
-        // ---- pulsar: metronome flash with lighthouse beams ----
-        if (i === pulsarIdxRef.current && !prefersReducedMotion) {
+        // ---- pulsars: metronome flashes with lighthouse beams ----
+        const pulsarMeta = !prefersReducedMotion
+          ? pulsarsRef.current.find((m) => m.idx === i)
+          : undefined;
+        if (pulsarMeta) {
           const pulse = Math.pow(
-            Math.max(0, Math.sin((now / 1400) * Math.PI * 2)),
+            Math.max(0, Math.sin((now / pulsarMeta.period) * Math.PI * 2)),
             10
           );
           finalOpacity = Math.min(p.opacity + pulse * 0.9, 1);
           finalSize = p.size + pulse * 1.8;
 
           if (pulse > 0.05) {
-            const beamAngle = 0.9;
             const beamLen = 30 + pulse * 46;
             for (const dir of [1, -1]) {
-              const ex = rx + Math.cos(beamAngle) * beamLen * dir;
-              const ey = ry + Math.sin(beamAngle) * beamLen * dir;
+              const ex = rx + Math.cos(pulsarMeta.angle) * beamLen * dir;
+              const ey = ry + Math.sin(pulsarMeta.angle) * beamLen * dir;
               const grad = ctx.createLinearGradient(rx, ry, ex, ey);
               grad.addColorStop(0, `rgba(190, 225, 255, ${0.55 * pulse})`);
               grad.addColorStop(1, "rgba(190, 225, 255, 0)");
@@ -471,36 +467,86 @@ export default function StarBackground() {
           }
         }
 
-        // ---- supernova: flare, then expanding remnant ring ----
+        // ---- supernova: diffraction-spiked flare, dual shockwave, nebula ----
         if (i === sn.idx && snT <= 1) {
-          if (snT < 0.25) {
-            const f = snT / 0.25;
-            const flare = 1 + f * 22;
-            const grad = ctx.createRadialGradient(rx, ry, 0, rx, ry, p.size * flare * 2.2);
-            grad.addColorStop(0, "rgba(255, 250, 235, 0.95)");
-            grad.addColorStop(0.4, "rgba(255, 210, 150, 0.5)");
-            grad.addColorStop(1, "rgba(255, 190, 120, 0)");
+          if (snT < 0.22) {
+            // detonation: brilliant core with JWST-style diffraction spikes
+            const f = snT / 0.22;
+            const ease = 1 - Math.pow(1 - f, 3);
+            const R = p.size * (1 + ease * 26) * 2.4;
+
+            const grad = ctx.createRadialGradient(rx, ry, 0, rx, ry, R);
+            grad.addColorStop(0, "rgba(255, 255, 250, 1)");
+            grad.addColorStop(0.25, "rgba(255, 235, 190, 0.75)");
+            grad.addColorStop(0.6, "rgba(255, 200, 140, 0.3)");
+            grad.addColorStop(1, "rgba(255, 180, 110, 0)");
             ctx.beginPath();
-            ctx.arc(rx, ry, p.size * flare * 2.2, 0, Math.PI * 2);
+            ctx.arc(rx, ry, R, 0, Math.PI * 2);
             ctx.fillStyle = grad;
             ctx.fill();
-            finalSize = p.size * (1 + f * 5);
+
+            // diffraction spikes: long cross + shorter diagonals
+            const spikes = [
+              { ang: 0, len: R * 2.6 },
+              { ang: Math.PI / 2, len: R * 2.6 },
+              { ang: Math.PI / 4, len: R * 1.5 },
+              { ang: -Math.PI / 4, len: R * 1.5 },
+            ];
+            for (const sp of spikes) {
+              for (const dir of [1, -1]) {
+                const ex = rx + Math.cos(sp.ang) * sp.len * dir;
+                const ey = ry + Math.sin(sp.ang) * sp.len * dir;
+                const sgrad = ctx.createLinearGradient(rx, ry, ex, ey);
+                sgrad.addColorStop(0, `rgba(255, 248, 230, ${0.85 * ease})`);
+                sgrad.addColorStop(1, "rgba(255, 248, 230, 0)");
+                ctx.beginPath();
+                ctx.moveTo(rx, ry);
+                ctx.lineTo(ex, ey);
+                ctx.strokeStyle = sgrad;
+                ctx.lineWidth = 1.3;
+                ctx.stroke();
+              }
+            }
+            finalSize = p.size * (1 + ease * 4);
             finalOpacity = 1;
           } else {
-            const f = (snT - 0.25) / 0.75;
-            const ringR = f * 210;
-            const ringAlpha = (1 - f) * 0.5;
+            // expansion: fast blue shock, slower orange ejecta, nebula glow
+            const f = (snT - 0.22) / 0.78;
+            const fade = 1 - f;
+
+            // lingering nebula remnant
+            const nebR = 26 + f * 70;
+            const neb = ctx.createRadialGradient(rx, ry, 0, rx, ry, nebR);
+            neb.addColorStop(0, `rgba(200, 150, 255, ${fade * 0.14})`);
+            neb.addColorStop(0.6, `rgba(255, 170, 120, ${fade * 0.08})`);
+            neb.addColorStop(1, "rgba(255, 170, 120, 0)");
             ctx.beginPath();
-            ctx.arc(rx, ry, ringR, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(255, 200, 150, ${ringAlpha})`;
-            ctx.lineWidth = 1.2 * (1 - f) + 0.3;
+            ctx.arc(rx, ry, nebR, 0, Math.PI * 2);
+            ctx.fillStyle = neb;
+            ctx.fill();
+
+            // fast blue shockwave
+            const shockR = f * 250;
+            ctx.beginPath();
+            ctx.arc(rx, ry, shockR, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(150, 200, 255, ${fade * 0.55})`;
+            ctx.lineWidth = 1.6 * fade + 0.3;
+            ctx.stroke();
+
+            // slower orange ejecta shell (slightly lumpy: two offset arcs)
+            const ejR = f * 165;
+            ctx.beginPath();
+            ctx.arc(rx, ry, ejR, 0.3, Math.PI * 1.75);
+            ctx.strokeStyle = `rgba(255, 185, 120, ${fade * 0.6})`;
+            ctx.lineWidth = 2.2 * fade + 0.3;
             ctx.stroke();
             ctx.beginPath();
-            ctx.arc(rx, ry, ringR * 0.7, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(180, 210, 255, ${ringAlpha * 0.5})`;
-            ctx.lineWidth = 0.6;
+            ctx.arc(rx, ry, ejR * 1.06, Math.PI * 1.6, Math.PI * 2.5);
+            ctx.strokeStyle = `rgba(255, 205, 150, ${fade * 0.4})`;
+            ctx.lineWidth = 1.4 * fade + 0.2;
             ctx.stroke();
-            finalOpacity = p.opacity * (0.4 + 0.6 * f);
+
+            finalOpacity = p.opacity * (0.3 + 0.7 * f);
           }
         }
 
@@ -644,68 +690,6 @@ export default function StarBackground() {
         ctx.strokeStyle = `rgba(255, 214, 130, ${(1 - t) * 0.7})`;
         ctx.lineWidth = 1.2 * (1 - t) + 0.2;
         ctx.stroke();
-      }
-
-      // ---- comets: rare, slow, with curved dust tails ----
-      if (!prefersReducedMotion) {
-        if (nextCometRef.current === 0) {
-          nextCometRef.current = now + 15000 + Math.random() * 25000;
-        }
-        if (now > nextCometRef.current) {
-          const fromLeft = Math.random() > 0.5;
-          cometsRef.current.push({
-            x: fromLeft ? -60 : canvas.width + 60,
-            y: Math.random() * canvas.height * 0.5,
-            vx: (fromLeft ? 1 : -1) * (1.6 + Math.random() * 0.9),
-            vy: 0.4 + Math.random() * 0.5,
-            trail: [],
-          });
-          nextCometRef.current = now + 40000 + Math.random() * 50000;
-        }
-
-        const comets = cometsRef.current;
-        for (let i = comets.length - 1; i >= 0; i--) {
-          const c = comets[i];
-          c.x += c.vx;
-          c.y += c.vy;
-          c.vy += 0.002; // gentle curve
-          c.trail.unshift({ x: c.x, y: c.y });
-          if (c.trail.length > 46) c.trail.pop();
-
-          if (
-            c.x < -160 || c.x > canvas.width + 160 || c.y > canvas.height + 160
-          ) {
-            comets.splice(i, 1);
-            continue;
-          }
-
-          for (let t = c.trail.length - 1; t > 0; t--) {
-            const frac = t / c.trail.length;
-            const pt = c.trail[t];
-            ctx.beginPath();
-            ctx.arc(
-              pt.x - c.vx * frac * 3,
-              pt.y - c.vy * frac * 3,
-              (1 - frac) * 2.2 + 0.3,
-              0,
-              Math.PI * 2
-            );
-            ctx.fillStyle = `rgba(170, 215, 255, ${(1 - frac) * 0.22})`;
-            ctx.fill();
-          }
-
-          const coma = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 9);
-          coma.addColorStop(0, "rgba(235, 245, 255, 0.9)");
-          coma.addColorStop(1, "rgba(170, 215, 255, 0)");
-          ctx.beginPath();
-          ctx.arc(c.x, c.y, 9, 0, Math.PI * 2);
-          ctx.fillStyle = coma;
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(c.x, c.y, 1.8, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-          ctx.fill();
-        }
       }
 
       // ---- shooting stars ----

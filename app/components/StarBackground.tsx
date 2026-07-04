@@ -35,11 +35,18 @@ interface Comet {
   trail: { x: number; y: number }[];
 }
 
+interface Flash {
+  x: number;
+  y: number;
+  start: number;
+}
+
 export default function StarBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const shootingStarsRef = useRef<ShootingStar[]>([]);
   const cometsRef = useRef<Comet[]>([]);
+  const flashesRef = useRef<Flash[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const scrollRef = useRef(0);
   const animFrameRef = useRef<number>(0);
@@ -80,22 +87,29 @@ export default function StarBackground() {
       };
     });
 
-    // pulsar: a star in the upper part of the field
+    // pulsar: a bright star in the upper part of the field
     const upper = particlesRef.current
       .map((p, i) => ({ p, i }))
-      .filter(({ p }) => p.baseY < height * 0.4);
+      .filter(({ p }) => p.baseY < height * 0.45 && p.depth > 0.5);
     pulsarIdxRef.current = upper.length
       ? upper[Math.floor(Math.random() * upper.length)].i
-      : -1;
+      : 0;
+    const pulsar = particlesRef.current[pulsarIdxRef.current];
+    if (pulsar) {
+      pulsar.size = Math.max(pulsar.size, 1.9);
+      pulsar.opacity = Math.max(pulsar.opacity, 0.55);
+    }
 
     // binary system: a star in the lower part, distinct from the pulsar
     const lower = particlesRef.current
       .map((p, i) => ({ p, i }))
-      .filter(({ p }, ) => p.baseY > height * 0.5);
+      .filter(({ p }) => p.baseY > height * 0.5 && p.depth > 0.45);
     const binaryPick = lower.length
       ? lower[Math.floor(Math.random() * lower.length)].i
       : -1;
     binaryIdxRef.current = binaryPick === pulsarIdxRef.current ? -1 : binaryPick;
+    const binary = particlesRef.current[binaryIdxRef.current];
+    if (binary) binary.opacity = Math.max(binary.opacity, 0.6);
   }, []);
 
   useEffect(() => {
@@ -200,6 +214,7 @@ export default function StarBackground() {
     const CURSOR_CONNECT_RADIUS = 220;
     const BH_RADIUS = 480;
     const BH_CORE = 13;
+    const LENS_RADIUS = 240;
 
     const animate = () => {
       if (!isVisibleRef.current || !ctx || !canvas) {
@@ -260,8 +275,9 @@ export default function StarBackground() {
               p.ox += ux * g * 5.5 + -uy * g * 3.2;
               p.oy += uy * g * 5.5 + ux * g * 3.2;
 
-              // consumed: respawn at a random edge
+              // consumed: flash at the horizon, respawn at a random edge
               if (bdist < BH_CORE + 6) {
+                flashesRef.current.push({ x: bh.x, y: bh.y, start: now });
                 const edge = Math.floor(Math.random() * 4);
                 p.baseX = edge === 0 ? -40 : edge === 1 ? canvas.width + 40 : Math.random() * canvas.width;
                 p.baseY = edge === 2 ? -40 : edge === 3 ? canvas.height + 40 : Math.random() * canvas.height;
@@ -277,7 +293,7 @@ export default function StarBackground() {
           p.x += p.ox;
           p.y += p.oy;
 
-          // Cursor repulsion — particles gently push away (suspended near a black hole)
+          // Cursor repulsion — suspended while a black hole is active
           if (!bhOn) {
             const dx = p.x - mouse.x;
             const dy = p.y - mouse.y;
@@ -350,10 +366,10 @@ export default function StarBackground() {
         }
       }
 
-      // Supernova scheduling: rare, recurring
+      // Supernova scheduling: first one arrives quickly, then rare
       if (!prefersReducedMotion) {
         if (nextSupernovaRef.current === 0) {
-          nextSupernovaRef.current = now + 20000 + Math.random() * 40000;
+          nextSupernovaRef.current = now + 6000 + Math.random() * 10000;
         }
         if (
           supernovaRef.current.idx === -1 &&
@@ -370,18 +386,35 @@ export default function StarBackground() {
       const snT = sn.idx >= 0 ? (now - sn.start) / 4200 : 2;
       if (snT > 1 && sn.idx >= 0) {
         supernovaRef.current = { idx: -1, start: 0 };
-        nextSupernovaRef.current = now + 60000 + Math.random() * 80000;
+        nextSupernovaRef.current = now + 40000 + Math.random() * 50000;
       }
 
       // Draw particles
       const konamiLeft = konamiUntilRef.current - now;
       const konami = konamiLeft > 0 ? Math.min(konamiLeft / 1500, 1) : 0;
+      const eR = 26 * bh.strength; // Einstein radius for fake lensing
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        const dx = p.x - mouse.x;
-        const dy = p.y - mouse.y;
+        // gravitational lensing: light bends around the mass — stars near the
+        // black hole render pushed outward, piling up toward the photon ring
+        let rx = p.x;
+        let ry = p.y;
+        if (bhOn) {
+          const ldx = p.x - bh.x;
+          const ldy = p.y - bh.y;
+          const ld = Math.sqrt(ldx * ldx + ldy * ldy) + 0.001;
+          if (ld < LENS_RADIUS) {
+            const falloff = 1 - ld / LENS_RADIUS;
+            const push = ((eR * eR) / (ld + 10)) * falloff;
+            rx = bh.x + (ldx / ld) * (ld + push);
+            ry = bh.y + (ldy / ld) * (ld + push);
+          }
+        }
+
+        const dx = rx - mouse.x;
+        const dy = ry - mouse.y;
         const cursorDist = Math.sqrt(dx * dx + dy * dy);
         const cursorGlow = cursorDist < CURSOR_CONNECT_RADIUS
           ? (1 - cursorDist / CURSOR_CONNECT_RADIUS) * 0.6
@@ -393,19 +426,19 @@ export default function StarBackground() {
         // ---- binary system: two stars orbiting a common center ----
         if (i === binaryIdxRef.current && !prefersReducedMotion) {
           const orbitAngle = now / 900 + p.phase;
-          const orbitR = 7;
-          const ax = p.x + Math.cos(orbitAngle) * orbitR;
-          const ay = p.y + Math.sin(orbitAngle) * orbitR * 0.55;
-          const bx = p.x - Math.cos(orbitAngle) * orbitR;
-          const by = p.y - Math.sin(orbitAngle) * orbitR * 0.55;
+          const orbitR = 9.5;
+          const ax = rx + Math.cos(orbitAngle) * orbitR;
+          const ay = ry + Math.sin(orbitAngle) * orbitR * 0.55;
+          const bx = rx - Math.cos(orbitAngle) * orbitR;
+          const by = ry - Math.sin(orbitAngle) * orbitR * 0.55;
 
           ctx.beginPath();
-          ctx.arc(ax, ay, 1.7, 0, Math.PI * 2);
+          ctx.arc(ax, ay, 2.2, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity})`;
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(bx, by, 1.2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(147, 197, 253, ${finalOpacity})`;
+          ctx.arc(bx, by, 1.6, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(140, 190, 255, ${finalOpacity})`;
           ctx.fill();
           continue;
         }
@@ -417,22 +450,22 @@ export default function StarBackground() {
             10
           );
           finalOpacity = Math.min(p.opacity + pulse * 0.9, 1);
-          finalSize = p.size + pulse * 1.6;
+          finalSize = p.size + pulse * 1.8;
 
           if (pulse > 0.05) {
             const beamAngle = 0.9;
-            const beamLen = 26 + pulse * 30;
+            const beamLen = 30 + pulse * 46;
             for (const dir of [1, -1]) {
-              const ex = p.x + Math.cos(beamAngle) * beamLen * dir;
-              const ey = p.y + Math.sin(beamAngle) * beamLen * dir;
-              const grad = ctx.createLinearGradient(p.x, p.y, ex, ey);
-              grad.addColorStop(0, `rgba(190, 225, 255, ${0.35 * pulse})`);
+              const ex = rx + Math.cos(beamAngle) * beamLen * dir;
+              const ey = ry + Math.sin(beamAngle) * beamLen * dir;
+              const grad = ctx.createLinearGradient(rx, ry, ex, ey);
+              grad.addColorStop(0, `rgba(190, 225, 255, ${0.55 * pulse})`);
               grad.addColorStop(1, "rgba(190, 225, 255, 0)");
               ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
+              ctx.moveTo(rx, ry);
               ctx.lineTo(ex, ey);
               ctx.strokeStyle = grad;
-              ctx.lineWidth = 1;
+              ctx.lineWidth = 1.2;
               ctx.stroke();
             }
           }
@@ -443,12 +476,12 @@ export default function StarBackground() {
           if (snT < 0.25) {
             const f = snT / 0.25;
             const flare = 1 + f * 22;
-            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * flare * 2.2);
-            grad.addColorStop(0, `rgba(255, 250, 235, ${0.95})`);
-            grad.addColorStop(0.4, `rgba(255, 210, 150, ${0.5})`);
+            const grad = ctx.createRadialGradient(rx, ry, 0, rx, ry, p.size * flare * 2.2);
+            grad.addColorStop(0, "rgba(255, 250, 235, 0.95)");
+            grad.addColorStop(0.4, "rgba(255, 210, 150, 0.5)");
             grad.addColorStop(1, "rgba(255, 190, 120, 0)");
             ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size * flare * 2.2, 0, Math.PI * 2);
+            ctx.arc(rx, ry, p.size * flare * 2.2, 0, Math.PI * 2);
             ctx.fillStyle = grad;
             ctx.fill();
             finalSize = p.size * (1 + f * 5);
@@ -458,17 +491,16 @@ export default function StarBackground() {
             const ringR = f * 210;
             const ringAlpha = (1 - f) * 0.5;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, ringR, 0, Math.PI * 2);
+            ctx.arc(rx, ry, ringR, 0, Math.PI * 2);
             ctx.strokeStyle = `rgba(255, 200, 150, ${ringAlpha})`;
             ctx.lineWidth = 1.2 * (1 - f) + 0.3;
             ctx.stroke();
-            // faint inner shockwave
             ctx.beginPath();
-            ctx.arc(p.x, p.y, ringR * 0.7, 0, Math.PI * 2);
+            ctx.arc(rx, ry, ringR * 0.7, 0, Math.PI * 2);
             ctx.strokeStyle = `rgba(180, 210, 255, ${ringAlpha * 0.5})`;
             ctx.lineWidth = 0.6;
             ctx.stroke();
-            finalOpacity = p.opacity * (0.4 + 0.6 * f); // dims, then recovers
+            finalOpacity = p.opacity * (0.4 + 0.6 * f);
           }
         }
 
@@ -477,8 +509,8 @@ export default function StarBackground() {
           const ringAlpha = finalOpacity * 0.8 * konami;
           ctx.beginPath();
           ctx.ellipse(
-            p.x,
-            p.y,
+            rx,
+            ry,
             finalSize * 3.2,
             finalSize * 1.1,
             -0.45 + p.phase * 0.1,
@@ -490,17 +522,34 @@ export default function StarBackground() {
           ctx.stroke();
         }
 
+        // spaghettification: stars stretch toward the singularity
+        if (bhOn) {
+          const sdx = bh.x - rx;
+          const sdy = bh.y - ry;
+          const sd = Math.sqrt(sdx * sdx + sdy * sdy) + 1;
+          if (sd < 210 && sd > BH_CORE) {
+            const stretch = Math.min(26, 900 / sd) * bh.strength;
+            const salpha = 0.4 * bh.strength * (1 - sd / 210);
+            ctx.beginPath();
+            ctx.moveTo(rx, ry);
+            ctx.lineTo(rx + (sdx / sd) * stretch, ry + (sdy / sd) * stretch);
+            ctx.strokeStyle = `rgba(255, 235, 200, ${salpha})`;
+            ctx.lineWidth = Math.min(finalSize, 1.4);
+            ctx.stroke();
+          }
+        }
+
         // Soft glow near cursor
         if (cursorGlow > 0.15) {
           ctx.beginPath();
-          ctx.arc(p.x, p.y, finalSize * 3, 0, Math.PI * 2);
+          ctx.arc(rx, ry, finalSize * 3, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(96, 165, 250, ${cursorGlow * 0.1})`;
           ctx.fill();
         }
 
         // Core particle
         ctx.beginPath();
-        ctx.arc(p.x, p.y, finalSize, 0, Math.PI * 2);
+        ctx.arc(rx, ry, finalSize, 0, Math.PI * 2);
         if (konami > 0.1) {
           ctx.fillStyle = `rgba(250, 214, 100, ${finalOpacity})`;
         } else if (cursorGlow > 0.1) {
@@ -514,27 +563,57 @@ export default function StarBackground() {
       // ---- black hole rendering ----
       if (bhOn) {
         const s = bh.strength;
+        // disk plane precesses slowly
+        const tilt = -0.38 + Math.sin(time * 0.15) * 0.08;
+
+        // relativistic polar jets, perpendicular to the disk
+        const jetAngle = tilt - Math.PI / 2;
+        for (const dir of [1, -1] as const) {
+          const jx = bh.x + Math.cos(jetAngle) * 74 * dir;
+          const jy = bh.y + Math.sin(jetAngle) * 74 * dir;
+          const jgrad = ctx.createLinearGradient(bh.x, bh.y, jx, jy);
+          jgrad.addColorStop(0, `rgba(147, 197, 253, ${0.3 * s})`);
+          jgrad.addColorStop(1, "rgba(147, 197, 253, 0)");
+          ctx.beginPath();
+          ctx.moveTo(bh.x, bh.y);
+          ctx.lineTo(jx, jy);
+          ctx.strokeStyle = jgrad;
+          ctx.lineWidth = 2.4;
+          ctx.stroke();
+        }
 
         // ambient glow
-        const glow = ctx.createRadialGradient(bh.x, bh.y, BH_CORE, bh.x, bh.y, 90);
-        glow.addColorStop(0, `rgba(251, 191, 36, ${0.22 * s})`);
-        glow.addColorStop(0.5, `rgba(147, 100, 250, ${0.08 * s})`);
+        const glow = ctx.createRadialGradient(bh.x, bh.y, BH_CORE, bh.x, bh.y, 100);
+        glow.addColorStop(0, `rgba(251, 191, 36, ${0.2 * s})`);
+        glow.addColorStop(0.5, `rgba(147, 100, 250, ${0.07 * s})`);
         glow.addColorStop(1, "rgba(0, 0, 0, 0)");
         ctx.beginPath();
-        ctx.arc(bh.x, bh.y, 90, 0, Math.PI * 2);
+        ctx.arc(bh.x, bh.y, 100, 0, Math.PI * 2);
         ctx.fillStyle = glow;
         ctx.fill();
 
-        // accretion disk: two rotating elliptical streams
-        for (const [tilt, rx, ry, color, alpha] of [
-          [time * 1.4, 34, 10, "251, 191, 36", 0.75],
-          [time * 1.4 + 1.1, 26, 8, "96, 165, 250", 0.45],
-        ] as const) {
-          ctx.beginPath();
-          ctx.ellipse(bh.x, bh.y, rx, ry, tilt % (Math.PI * 2), 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(${color}, ${alpha * s})`;
-          ctx.lineWidth = 1.6;
-          ctx.stroke();
+        // Doppler-beamed accretion disk: approaching side glows brighter
+        const beamPhase = time * 2.2;
+        const rings = [
+          { rx: 21, ry: 6.5, hot: true, base: 0.95, lw: 1.9 },
+          { rx: 30, ry: 9.5, hot: false, base: 0.6, lw: 1.4 },
+          { rx: 40, ry: 13.5, hot: false, base: 0.28, lw: 1.0 },
+        ];
+        const SEG = 26;
+        for (const ring of rings) {
+          for (let k = 0; k < SEG; k++) {
+            const a0 = (k / SEG) * Math.PI * 2;
+            const a1 = ((k + 1) / SEG) * Math.PI * 2 + 0.03;
+            const beam = 0.5 + 0.5 * Math.cos(a0 + beamPhase);
+            const alpha = ring.base * (0.25 + 0.75 * beam) * s;
+            ctx.beginPath();
+            ctx.ellipse(bh.x, bh.y, ring.rx, ring.ry, tilt, a0, a1);
+            ctx.strokeStyle = ring.hot
+              ? `rgba(255, 242, 215, ${alpha})`
+              : `rgba(251, 166, 60, ${alpha})`;
+            ctx.lineWidth = ring.lw;
+            ctx.stroke();
+          }
         }
 
         // event horizon
@@ -546,8 +625,24 @@ export default function StarBackground() {
         // photon ring
         ctx.beginPath();
         ctx.arc(bh.x, bh.y, BH_CORE + 1.5, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 235, 200, ${0.8 * s})`;
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(255, 235, 200, ${0.85 * s})`;
+        ctx.lineWidth = 1.1;
+        ctx.stroke();
+      }
+
+      // consumption flashes at the event horizon
+      const flashes = flashesRef.current;
+      for (let i = flashes.length - 1; i >= 0; i--) {
+        const f = flashes[i];
+        const t = (now - f.start) / 380;
+        if (t > 1) {
+          flashes.splice(i, 1);
+          continue;
+        }
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, BH_CORE + 2 + t * 16, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 214, 130, ${(1 - t) * 0.7})`;
+        ctx.lineWidth = 1.2 * (1 - t) + 0.2;
         ctx.stroke();
       }
 
@@ -584,7 +679,6 @@ export default function StarBackground() {
             continue;
           }
 
-          // dust tail
           for (let t = c.trail.length - 1; t > 0; t--) {
             const frac = t / c.trail.length;
             const pt = c.trail[t];
@@ -600,7 +694,6 @@ export default function StarBackground() {
             ctx.fill();
           }
 
-          // nucleus + coma
           const coma = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 9);
           coma.addColorStop(0, "rgba(235, 245, 255, 0.9)");
           coma.addColorStop(1, "rgba(170, 215, 255, 0)");

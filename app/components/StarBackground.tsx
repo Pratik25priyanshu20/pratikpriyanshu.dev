@@ -13,14 +13,27 @@ interface Particle {
   phase: number;
   driftX: number;
   driftY: number;
+  depth: number;
+}
+
+interface ShootingStar {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
 }
 
 export default function StarBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
+  const shootingStarsRef = useRef<ShootingStar[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000 });
+  const scrollRef = useRef(0);
   const animFrameRef = useRef<number>(0);
   const isVisibleRef = useRef(true);
+  const nextShootingStarRef = useRef(0);
 
   const initParticles = useCallback((width: number, height: number) => {
     const isMobile = width < 768;
@@ -29,17 +42,19 @@ export default function StarBackground() {
     particlesRef.current = Array.from({ length: count }, () => {
       const x = Math.random() * width;
       const y = Math.random() * height;
+      const depth = Math.random() * 0.85 + 0.15; // 0.15 (far) — 1.0 (near)
       return {
         x,
         y,
         baseX: x,
         baseY: y,
-        size: Math.random() * 2 + 0.5,
-        opacity: Math.random() * 0.5 + 0.15,
+        size: (Math.random() * 2 + 0.5) * (0.5 + depth * 0.5),
+        opacity: (Math.random() * 0.5 + 0.15) * (0.4 + depth * 0.6),
         speed: Math.random() * 0.3 + 0.05,
         phase: Math.random() * Math.PI * 2,
         driftX: (Math.random() - 0.5) * 0.3,
         driftY: (Math.random() - 0.5) * 0.3,
+        depth,
       };
     });
   }, []);
@@ -72,6 +87,11 @@ export default function StarBackground() {
     };
     window.addEventListener("mousemove", handleMouse, { passive: true });
     window.addEventListener("mouseleave", handleMouseLeave);
+
+    const handleScroll = () => {
+      scrollRef.current = window.scrollY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     const handleVisibility = () => {
       isVisibleRef.current = !document.hidden;
@@ -107,6 +127,10 @@ export default function StarBackground() {
           p.y = p.baseY
             + Math.cos(time * p.speed * 0.8 + p.phase) * 30
             + Math.sin(time * p.speed * 0.5 + p.phase * 0.7) * 15;
+
+          // Depth-based scroll parallax: near stars drift up faster than far ones
+          const parallax = scrollRef.current * p.depth * 0.12;
+          p.y = ((p.y - parallax) % canvas.height + canvas.height) % canvas.height;
 
           // Slow linear drift
           p.baseX += p.driftX * 0.05;
@@ -225,6 +249,71 @@ export default function StarBackground() {
         ctx.fill();
       }
 
+      // Shooting stars
+      if (!prefersReducedMotion) {
+        const now = performance.now();
+        if (nextShootingStarRef.current === 0) {
+          nextShootingStarRef.current = now + 4000 + Math.random() * 5000;
+        }
+        if (now > nextShootingStarRef.current) {
+          const goingRight = Math.random() > 0.5;
+          const speed = 9 + Math.random() * 5;
+          const angle = (18 + Math.random() * 17) * (Math.PI / 180);
+          shootingStarsRef.current.push({
+            x: goingRight
+              ? Math.random() * canvas.width * 0.4
+              : canvas.width * 0.6 + Math.random() * canvas.width * 0.4,
+            y: Math.random() * canvas.height * 0.45,
+            vx: Math.cos(angle) * speed * (goingRight ? 1 : -1),
+            vy: Math.sin(angle) * speed,
+            life: 0,
+            maxLife: 45 + Math.random() * 25,
+          });
+          nextShootingStarRef.current = now + 8000 + Math.random() * 10000;
+        }
+
+        const stars = shootingStarsRef.current;
+        for (let i = stars.length - 1; i >= 0; i--) {
+          const s = stars[i];
+          s.x += s.vx;
+          s.y += s.vy;
+          s.life++;
+
+          if (
+            s.life > s.maxLife ||
+            s.x < -100 || s.x > canvas.width + 100 ||
+            s.y > canvas.height + 100
+          ) {
+            stars.splice(i, 1);
+            continue;
+          }
+
+          // fade in fast, fade out toward end of life
+          const t = s.life / s.maxLife;
+          const alpha = t < 0.15 ? t / 0.15 : 1 - (t - 0.15) / 0.85;
+
+          const trail = 14;
+          const tailX = s.x - s.vx * trail * 0.35;
+          const tailY = s.y - s.vy * trail * 0.35;
+          const grad = ctx.createLinearGradient(s.x, s.y, tailX, tailY);
+          grad.addColorStop(0, `rgba(220, 235, 255, ${alpha * 0.9})`);
+          grad.addColorStop(1, "rgba(220, 235, 255, 0)");
+
+          ctx.beginPath();
+          ctx.moveTo(s.x, s.y);
+          ctx.lineTo(tailX, tailY);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+
+          // bright head
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 1.6, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+          ctx.fill();
+        }
+      }
+
       animFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -235,6 +324,7 @@ export default function StarBackground() {
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", handleMouse);
       window.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [initParticles]);

@@ -13,12 +13,22 @@ export interface Project {
   techStack: string[];
   links: { label: string; url: string }[];
   pipInstall?: string;
+  threads: string[];
   color: string;
 }
+
+export const researchThreads = [
+  "Scientific ML",
+  "Uncertainty & Calibration",
+  "Multi-Agent Systems",
+  "Retrieval & RAG",
+  "Multimodal & Perception",
+] as const;
 
 export const projects: Project[] = [
   {
     id: "hnep",
+    threads: ["Scientific ML", "Uncertainty & Calibration"],
     title: "HNEP | Reproducible Benchmarking Framework for Quantum-Classical Hybrid Learning",
     tagline:
       "A multi-method evaluation protocol that reveals how quantum components contribute \u2014 not just whether they help \u2014 through the Quantum Contribution Taxonomy (GENUINE / REGULARIZER / IGNORED / DEAD WEIGHT)",
@@ -78,6 +88,7 @@ export const projects: Project[] = [
   },
   {
     id: "exoveil",
+    threads: ["Scientific ML", "Uncertainty & Calibration"],
     title: "ExoVeil | Detecting Single-Transit Exoplanets via Learned Stellar Behaviour",
     tagline:
       "Transformer world model that predicts stellar brightness and flags transits as anomalies \u2014 detecting planets that classification-based systems structurally cannot see",
@@ -139,6 +150,7 @@ export const projects: Project[] = [
   },
   {
     id: "cmsci",
+    threads: ["Uncertainty & Calibration", "Multimodal & Perception"],
     title: "cMSCI | Calibrated Multimodal Coherence Evaluation",
     tagline:
       "Embedding-agnostic geometric metric for tri-modal (text-image-audio) coherence — validated across dual-space (CLIP+CLAP) and unified-space (Gemini Embedding 2) backbones; manuscript under review",
@@ -196,6 +208,7 @@ export const projects: Project[] = [
   },
   {
     id: "swim",
+    threads: ["Scientific ML", "Uncertainty & Calibration", "Multi-Agent Systems"],
     title: "SWIM | Multi-Agent AI for Environmental Monitoring",
     tagline: "Surface Water Intelligence & Monitoring: a multi-agent system for predicting Harmful Algal Blooms across German lakes using satellite, in-situ, and visual data",
     description:
@@ -251,6 +264,7 @@ export const projects: Project[] = [
   },
   {
     id: "jurag",
+    threads: ["Retrieval & RAG"],
     title: "JuRAG | Graph-Augmented Legal Retrieval & Responsible AI",
     tagline: "Research framework evaluating how retrieval strategy affects faithfulness, fairness, and grounding in AI-assisted legal decision support across 251k German court decisions",
     description:
@@ -310,6 +324,7 @@ export const projects: Project[] = [
   },
   {
     id: "haftung",
+    threads: ["Multi-Agent Systems", "Retrieval & RAG", "Multimodal & Perception"],
     title: "Haftung-AI | Multi-Agent Traffic Accident Liability Analysis",
     tagline: "9-agent system for analyzing traffic accident liability under German law (StVO) with vision perception, telemetry parsing, and RAG-augmented legal reasoning",
     description:
@@ -370,6 +385,7 @@ export const projects: Project[] = [
   },
   {
     id: "arkis",
+    threads: ["Uncertainty & Calibration", "Multi-Agent Systems", "Retrieval & RAG"],
     title: "ARKIS | Trust-Aware Agentic RAG System",
     tagline: "Epistemically-grounded multi-agent retrieval system with contradiction detection and adaptive hybrid retrieval",
     description:
@@ -428,6 +444,7 @@ export const projects: Project[] = [
   },
   {
     id: "autobahn",
+    threads: ["Multimodal & Perception"],
     title: "Autobahn | Autonomous Perception & ADAS Stack",
     tagline: "Production-grade multi-sensor perception engine with ISO-26262 safety architecture and real-time latency guarantees",
     description:

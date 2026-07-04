@@ -2,6 +2,7 @@
 
 import { motion, type Variants } from "framer-motion";
 import Image from "next/image";
+import LightCurve from "./LightCurve";
 
 const stagger: Variants = {
   hidden: { opacity: 0 },
@@ -34,9 +35,10 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="min-h-screen flex items-center pt-16"
+      className="min-h-screen flex items-center pt-16 relative"
       aria-label="Introduction"
     >
+      <LightCurve />
       <div className="section-container w-full">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           {/* Text — 55% */}

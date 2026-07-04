@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Project } from "@/lib/projects";
+import CountUp from "./CountUp";
 
 interface ProjectCardProps {
   project: Project;
@@ -27,6 +28,18 @@ function ChevronIcon({ open }: { open: boolean }) {
 
 export default function ProjectCard({ project, index }: ProjectCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyPipInstall = async () => {
+    if (!project.pipInstall) return;
+    try {
+      await navigator.clipboard.writeText(project.pipInstall);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard unavailable (e.g. insecure context) — silently ignore
+    }
+  };
 
   return (
     <motion.article
@@ -87,7 +100,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 className="text-lg font-heading font-bold"
                 style={{ color: project.color }}
               >
-                {metric.value}
+                <CountUp value={metric.value} />
               </div>
               <div className="text-xs text-text-muted">{metric.label}</div>
             </div>
@@ -245,19 +258,49 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
         )}
       </AnimatePresence>
 
-      {/* pip install chip */}
+      {/* pip install chip — click to copy */}
       {project.pipInstall && (
         <div className="pt-4 border-t border-border/50 mb-3">
-          <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md font-mono text-xs bg-surface-light/60 border"
+          <button
+            onClick={copyPipInstall}
+            className="group/pip inline-flex items-center gap-2 px-3 py-1.5 rounded-md font-mono text-xs bg-surface-light/60 border cursor-pointer transition-all duration-200 hover:bg-surface-light"
             style={{
-              borderColor: `${project.color}30`,
+              borderColor: copied ? `${project.color}70` : `${project.color}30`,
               color: `${project.color}dd`,
             }}
+            aria-label={`Copy ${project.pipInstall} to clipboard`}
+            title="Copy to clipboard"
           >
             <span className="text-text-muted select-none">$</span>
             <span>{project.pipInstall}</span>
-          </div>
+            {copied ? (
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                aria-hidden="true"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="opacity-40 group-hover/pip:opacity-100 transition-opacity"
+                aria-hidden="true"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+              </svg>
+            )}
+          </button>
         </div>
       )}
 

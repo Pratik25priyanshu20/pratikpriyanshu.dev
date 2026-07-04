@@ -366,7 +366,7 @@ function CoherenceMeter({ active }: EffectProps) {
 
   return (
     <div
-      className="absolute bottom-16 right-5 z-[5] pointer-events-none hidden lg:block"
+      className="absolute bottom-6 right-5 z-[5] pointer-events-none hidden lg:block"
       aria-hidden="true"
       style={{ opacity: active ? 1 : 0.45, transition: "opacity 0.5s" }}
     >

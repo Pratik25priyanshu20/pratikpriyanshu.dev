@@ -214,7 +214,7 @@ function QctCollapse({ active }: EffectProps) {
       aria-hidden="true"
       style={{ opacity: active ? 0.95 : 0.3, transition: "opacity 0.5s" }}
     >
-      <svg width="196" height="146" viewBox={`0 0 ${QCT_W} ${QCT_H}`} fill="none">
+      <svg width="228" height="170" viewBox={`0 0 ${QCT_W} ${QCT_H}`} fill="none">
         {/* grid */}
         <rect x="4" y="8" width="150" height="104" rx="6" stroke="#8b5cf6" strokeOpacity="0.4" />
         <line x1="79" y1="8" x2="79" y2="112" stroke="#8b5cf6" strokeOpacity="0.3" />
@@ -370,7 +370,7 @@ function CoherenceMeter({ active }: EffectProps) {
       aria-hidden="true"
       style={{ opacity: active ? 1 : 0.45, transition: "opacity 0.5s" }}
     >
-      <svg width={CO_W} height={CO_H} viewBox={`0 0 ${CO_W} ${CO_H}`} fill="none">
+      <svg width="172" height="166" viewBox={`0 0 ${CO_W} ${CO_H}`} fill="none">
         {/* triangle fill — glows when coherent */}
         <motion.polygon
           points={CO_VERTS.map((v) => `${v.x},${v.y}`).join(" ")}
@@ -495,7 +495,7 @@ const GRAPH_EDGES: [number, number][] = [
 function CitationGraph({ active }: EffectProps) {
   return (
     <div
-      className="absolute bottom-16 right-5 z-[1] pointer-events-none hidden lg:block"
+      className="absolute bottom-8 right-5 z-[1] pointer-events-none hidden lg:block"
       aria-hidden="true"
       style={{ opacity: active ? 0.85 : 0.22, transition: "opacity 0.5s" }}
     >
@@ -740,7 +740,7 @@ function MiniLightCurve({ active }: EffectProps) {
           className="absolute bottom-16 right-5 z-[5] pointer-events-none hidden lg:block"
           aria-hidden="true"
         >
-          <svg width="216" height="66" viewBox="0 0 170 52" fill="none">
+          <svg width="252" height="77" viewBox="0 0 170 52" fill="none">
             <motion.path
               d={MINI_CURVE.path}
               stroke="#facc15"

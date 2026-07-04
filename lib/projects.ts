@@ -229,7 +229,7 @@ export const projects: Project[] = [
     metrics: [
       { label: "AUROC (Bloom Prediction)", value: "0.814", note: "monolithic baseline across 7 German lakes" },
       { label: "Autonomous AI Agents", value: "5" },
-      { label: "Lines of Python", value: "14,000+" },
+      { label: "Data Modalities Fused", value: "4", note: "Sentinel-2 satellite, in-situ sensors, DWD weather, visual" },
       { label: "Unit Tests", value: "112+" },
     ],
     learnings: [

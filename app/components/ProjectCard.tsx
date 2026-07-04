@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Project } from "@/lib/projects";
 import CountUp from "./CountUp";
 import CardEffect from "./CardEffects";
+import TransitLab from "./TransitLab";
 
 interface ProjectCardProps {
   project: Project;
@@ -275,6 +276,9 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Interactive transit detector (ExoVeil only) */}
+      {project.id === "exoveil" && <TransitLab />}
 
       {/* pip install chip — click to copy */}
       {project.pipInstall && (

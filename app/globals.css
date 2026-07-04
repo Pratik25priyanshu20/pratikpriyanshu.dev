@@ -81,6 +81,17 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Observatory mode: red-light overlay preserves astronomer night vision */
+html[data-observatory] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgb(255, 42, 22);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 9999;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-text-primary);

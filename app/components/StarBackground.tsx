@@ -34,6 +34,8 @@ export default function StarBackground() {
   const animFrameRef = useRef<number>(0);
   const isVisibleRef = useRef(true);
   const nextShootingStarRef = useRef(0);
+  const konamiUntilRef = useRef(0);
+  const konamiProgressRef = useRef(0);
 
   const initParticles = useCallback((width: number, height: number) => {
     const isMobile = width < 768;
@@ -92,6 +94,30 @@ export default function StarBackground() {
       scrollRef.current = window.scrollY;
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
+
+    const KONAMI = [
+      "ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown",
+      "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight",
+      "b", "a",
+    ];
+    const handleKonami = (e: KeyboardEvent) => {
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (key === KONAMI[konamiProgressRef.current]) {
+        konamiProgressRef.current++;
+        if (konamiProgressRef.current === KONAMI.length) {
+          konamiProgressRef.current = 0;
+          konamiUntilRef.current = performance.now() + 7000;
+          // eslint-disable-next-line no-console
+          console.log(
+            "%c⟡ every star is a planet, if you look long enough",
+            "color:#facc15;font-style:italic"
+          );
+        }
+      } else {
+        konamiProgressRef.current = key === KONAMI[0] ? 1 : 0;
+      }
+    };
+    window.addEventListener("keydown", handleKonami);
 
     const handleVisibility = () => {
       isVisibleRef.current = !document.hidden;
@@ -238,10 +264,33 @@ export default function StarBackground() {
           ctx.fill();
         }
 
+        // Konami: every star becomes a ringed planet
+        const konamiLeft = konamiUntilRef.current - performance.now();
+        const konami = konamiLeft > 0 ? Math.min(konamiLeft / 1500, 1) : 0;
+
+        if (konami > 0) {
+          const ringAlpha = finalOpacity * 0.8 * konami;
+          ctx.beginPath();
+          ctx.ellipse(
+            p.x,
+            p.y,
+            finalSize * 3.2,
+            finalSize * 1.1,
+            -0.45 + p.phase * 0.1,
+            0,
+            Math.PI * 2
+          );
+          ctx.strokeStyle = `rgba(250, 204, 21, ${ringAlpha})`;
+          ctx.lineWidth = 0.7;
+          ctx.stroke();
+        }
+
         // Core particle
         ctx.beginPath();
         ctx.arc(p.x, p.y, finalSize, 0, Math.PI * 2);
-        if (cursorGlow > 0.1) {
+        if (konami > 0.1) {
+          ctx.fillStyle = `rgba(250, 214, 100, ${finalOpacity})`;
+        } else if (cursorGlow > 0.1) {
           ctx.fillStyle = `rgba(160, 200, 255, ${finalOpacity})`;
         } else {
           ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity})`;
@@ -325,6 +374,7 @@ export default function StarBackground() {
       window.removeEventListener("mousemove", handleMouse);
       window.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("keydown", handleKonami);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [initParticles]);

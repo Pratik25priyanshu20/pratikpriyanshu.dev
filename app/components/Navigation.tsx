@@ -19,6 +19,22 @@ export default function Navigation() {
   const [activeSection, setActiveSection] = useState("hero");
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [observatory, setObservatory] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("observatory") === "1";
+    setObservatory(saved);
+    document.documentElement.toggleAttribute("data-observatory", saved);
+  }, []);
+
+  const toggleObservatory = useCallback(() => {
+    setObservatory((prev) => {
+      const next = !prev;
+      document.documentElement.toggleAttribute("data-observatory", next);
+      localStorage.setItem("observatory", next ? "1" : "0");
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -121,6 +137,32 @@ export default function Navigation() {
                 )}
               </button>
             ))}
+
+            {/* Observatory mode toggle */}
+            <button
+              onClick={toggleObservatory}
+              className={`ml-2 p-2 rounded-lg transition-all duration-300 ${
+                observatory
+                  ? "text-red-400 bg-red-500/10"
+                  : "text-text-muted hover:text-text-secondary hover:bg-surface-light/50"
+              }`}
+              aria-label="Toggle observatory mode"
+              aria-pressed={observatory}
+              title="Observatory mode — red light preserves night vision"
+            >
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+              </svg>
+            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -171,6 +213,17 @@ export default function Navigation() {
                     {label}
                   </button>
                 ))}
+                <button
+                  onClick={toggleObservatory}
+                  className={`text-left text-sm font-medium py-2.5 px-3 rounded-lg transition-all duration-200 ${
+                    observatory
+                      ? "text-red-400 bg-red-500/10"
+                      : "text-text-secondary hover:text-text-primary hover:bg-surface-light/30"
+                  }`}
+                  aria-pressed={observatory}
+                >
+                  {observatory ? "☾ Observatory mode on" : "☾ Observatory mode"}
+                </button>
               </div>
             </motion.div>
           )}

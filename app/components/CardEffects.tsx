@@ -214,7 +214,7 @@ function QctCollapse({ active }: EffectProps) {
       aria-hidden="true"
       style={{ opacity: active ? 0.95 : 0.3, transition: "opacity 0.5s" }}
     >
-      <svg width={QCT_W} height={QCT_H} viewBox={`0 0 ${QCT_W} ${QCT_H}`} fill="none">
+      <svg width="196" height="146" viewBox={`0 0 ${QCT_W} ${QCT_H}`} fill="none">
         {/* grid */}
         <rect x="4" y="8" width="150" height="104" rx="6" stroke="#8b5cf6" strokeOpacity="0.4" />
         <line x1="79" y1="8" x2="79" y2="112" stroke="#8b5cf6" strokeOpacity="0.3" />
@@ -366,7 +366,7 @@ function CoherenceMeter({ active }: EffectProps) {
 
   return (
     <div
-      className="absolute top-5 right-5 z-[5] pointer-events-none hidden lg:block"
+      className="absolute bottom-16 right-5 z-[5] pointer-events-none hidden lg:block"
       aria-hidden="true"
       style={{ opacity: active ? 1 : 0.45, transition: "opacity 0.5s" }}
     >
@@ -737,10 +737,10 @@ function MiniLightCurve({ active }: EffectProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute top-6 right-5 z-[5] pointer-events-none hidden lg:block"
+          className="absolute bottom-16 right-5 z-[5] pointer-events-none hidden lg:block"
           aria-hidden="true"
         >
-          <svg width="170" height="52" viewBox="0 0 170 52" fill="none">
+          <svg width="216" height="66" viewBox="0 0 170 52" fill="none">
             <motion.path
               d={MINI_CURVE.path}
               stroke="#facc15"
@@ -801,7 +801,7 @@ function AgentMesh({ active }: EffectProps) {
 
   return (
     <div
-      className="absolute top-5 right-5 z-[1] pointer-events-none hidden lg:block"
+      className="absolute bottom-16 right-5 z-[1] pointer-events-none hidden lg:block"
       aria-hidden="true"
       style={{ opacity: active ? 0.95 : 0.3, transition: "opacity 0.5s" }}
     >

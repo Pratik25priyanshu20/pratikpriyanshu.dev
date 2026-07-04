@@ -4,6 +4,8 @@ export interface Milestone {
   x: number;
   /** flare height in px — significance */
   h: number;
+  /** short always-visible label */
+  label: string;
   date: string;
   title: string;
   blurb: string;
@@ -14,8 +16,9 @@ export interface Milestone {
 export const milestones: Milestone[] = [
   {
     id: "btech",
+    label: "B.Tech",
     x: 0.04,
-    h: 14,
+    h: 26,
     date: "2023",
     title: "B.Tech, Computer Science",
     blurb: "Thesis: deep learning for melanoma detection from dermatoscopic images.",
@@ -23,8 +26,9 @@ export const milestones: Milestone[] = [
   },
   {
     id: "msc",
+    label: "M.Sc.",
     x: 0.18,
-    h: 20,
+    h: 38,
     date: "Oct 2024",
     title: "M.Sc. begins — SRH Heidelberg",
     blurb: "Applied Data Science & Analytics. The research arc starts here.",
@@ -32,8 +36,9 @@ export const milestones: Milestone[] = [
   },
   {
     id: "swim",
+    label: "SWIM",
     x: 0.34,
-    h: 26,
+    h: 52,
     date: "Mar–Sep 2025",
     title: "SWIM",
     blurb: "5-agent system forecasting harmful algal blooms across German lakes.",
@@ -41,8 +46,9 @@ export const milestones: Milestone[] = [
   },
   {
     id: "jurag",
+    label: "JuRAG",
     x: 0.47,
-    h: 24,
+    h: 48,
     date: "Oct–Dec 2025",
     title: "JuRAG",
     blurb: "Retrieval & faithfulness evaluation over 251k German court decisions.",
@@ -50,8 +56,9 @@ export const milestones: Milestone[] = [
   },
   {
     id: "promid",
+    label: "FIRE '25",
     x: 0.56,
-    h: 34,
+    h: 64,
     date: "Dec 2025",
     title: "First publication — FIRE 2025",
     blurb: "PROMID shared task, ranked 4th. CEUR Workshop Proceedings Vol. 4173.",
@@ -60,8 +67,9 @@ export const milestones: Milestone[] = [
   },
   {
     id: "cmsci",
+    label: "cMSCI",
     x: 0.65,
-    h: 30,
+    h: 56,
     date: "Jan–Mar 2026",
     title: "cMSCI",
     blurb: "Tri-modal coherence metric, ρ = 0.785 vs human judgment. Under review.",
@@ -70,8 +78,9 @@ export const milestones: Milestone[] = [
   },
   {
     id: "exoveil",
+    label: "ExoVeil",
     x: 0.76,
-    h: 46,
+    h: 96,
     date: "Dec 2025 – May 2026",
     title: "ExoVeil — arXiv + PyPI",
     blurb: "Single-transit exoplanet detection. 179 new candidates, 47/47 zero-shot TESS.",
@@ -80,8 +89,9 @@ export const milestones: Milestone[] = [
   },
   {
     id: "clef",
+    label: "CLEF '26",
     x: 0.85,
-    h: 34,
+    h: 70,
     date: "2026",
     title: "CLEF 2026 — two shared tasks",
     blurb: "1st in ImageCLEF Textual MCQ; CultuRAG at ELOQUENT. Working notes under review.",
@@ -90,8 +100,9 @@ export const milestones: Milestone[] = [
   },
   {
     id: "hnep",
+    label: "HNEP",
     x: 0.93,
-    h: 42,
+    h: 86,
     date: "Mar 2026 – present",
     title: "HNEP — M.Sc. thesis",
     blurb: "Quantum Contribution Taxonomy. pip install hnep. Defence: July 2026.",

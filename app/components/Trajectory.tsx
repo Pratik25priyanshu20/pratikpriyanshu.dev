@@ -5,11 +5,11 @@ import { motion, useReducedMotion } from "framer-motion";
 import { milestones, yearTicks } from "@/lib/trajectory";
 
 const W = 1000;
-const H = 210;
-const BASE = 148;
+const H = 300;
+const BASE = 225;
 const X0 = 30;
 const X1 = 900; // solid curve ends here; dotted future beyond
-const N = 300;
+const N = 320;
 
 function mulberry32(seed: number) {
   return () => {
@@ -29,21 +29,24 @@ function buildCurve() {
   for (let i = 0; i < N; i++) {
     const x = X0 + (i / (N - 1)) * (X1 - X0);
     let y = BASE + (rand() - 0.5) * 5;
-    // brightening events: gaussian flares at each milestone
     for (const m of milestones) {
       const mx = toPx(m.x);
-      const w = 16 + m.h * 0.35;
+      const w = 13 + m.h * 0.16;
       y -= m.h * Math.exp(-((x - mx) ** 2) / (2 * w * w));
     }
     pts.push([x, y]);
   }
-  return pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const line = pts
+    .map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`)
+    .join(" ");
+  const area = `${line} L${X1},${BASE + 20} L${X0},${BASE + 20} Z`;
+  return { line, area };
 }
 
 export default function Trajectory() {
   const prefersReducedMotion = useReducedMotion();
   const [active, setActive] = useState<string | null>(null);
-  const path = useMemo(buildCurve, []);
+  const { line, area } = useMemo(buildCurve, []);
 
   const activeMilestone = milestones.find((m) => m.id === active);
 
@@ -55,7 +58,7 @@ export default function Trajectory() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="mb-4"
         >
           <h2 className="section-title">
             Tra<span className="gradient-text">jectory</span>
@@ -77,16 +80,16 @@ export default function Trajectory() {
           <div
             className="pointer-events-none absolute z-10 transition-all duration-200"
             style={{
-              left: `${activeMilestone ? (toPx(activeMilestone.x) / W) * 100 : 50}%`,
-              top: 0,
+              left: `${activeMilestone ? Math.min(88, Math.max(12, (toPx(activeMilestone.x) / W) * 100)) : 50}%`,
+              top: -8,
               transform: "translateX(-50%)",
               opacity: activeMilestone ? 1 : 0,
             }}
           >
             {activeMilestone && (
               <div
-                className="w-max max-w-[280px] rounded-lg border bg-surface/95 backdrop-blur-sm px-3.5 py-2.5 text-left shadow-xl"
-                style={{ borderColor: `${activeMilestone.color}40` }}
+                className="w-max max-w-[300px] rounded-lg border bg-surface/95 backdrop-blur-sm px-3.5 py-2.5 text-left shadow-xl"
+                style={{ borderColor: `${activeMilestone.color}45` }}
               >
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-[10px] font-mono text-text-muted">
@@ -117,21 +120,35 @@ export default function Trajectory() {
             )}
           </div>
 
-          <svg viewBox={`0 0 ${W} ${H}`} className="w-full mt-20" fill="none">
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-full mt-14" fill="none">
             <defs>
               <linearGradient id="traj-stroke" x1={X0} y1="0" x2={X1} y2="0" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
-                <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.7" />
-                <stop offset="100%" stopColor="#facc15" stopOpacity="0.9" />
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#facc15" stopOpacity="1" />
+              </linearGradient>
+              <linearGradient id="traj-fill" x1="0" y1="60" x2="0" y2={BASE + 20} gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.01" />
               </linearGradient>
             </defs>
+
+            {/* area under the curve */}
+            <motion.path
+              d={area}
+              fill="url(#traj-fill)"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 1.4, delay: 0.6 }}
+            />
 
             {/* baseline axis */}
             <line
               x1={X0}
-              y1={BASE + 22}
+              y1={BASE + 20}
               x2={W - 10}
-              y2={BASE + 22}
+              y2={BASE + 20}
               stroke="#333333"
               strokeWidth="1"
             />
@@ -139,9 +156,9 @@ export default function Trajectory() {
               <g key={t.label}>
                 <line
                   x1={toPx(t.x)}
-                  y1={BASE + 18}
+                  y1={BASE + 16}
                   x2={toPx(t.x)}
-                  y2={BASE + 26}
+                  y2={BASE + 24}
                   stroke="#666666"
                   strokeWidth="1"
                 />
@@ -149,20 +166,54 @@ export default function Trajectory() {
                   x={toPx(t.x)}
                   y={BASE + 42}
                   textAnchor="middle"
-                  fontSize="11"
+                  fontSize="12"
                   fontFamily="var(--font-fira-code), monospace"
-                  fill="#666666"
+                  fill="#777777"
                 >
                   {t.label}
                 </text>
               </g>
             ))}
 
+            {/* milestone stems, glows, and labels */}
+            {milestones.map((m) => {
+              const mx = toPx(m.x);
+              const my = BASE - m.h - 3;
+              const isActive = active === m.id;
+              return (
+                <g key={`under-${m.id}`}>
+                  {/* dashed stem from baseline to peak */}
+                  <motion.line
+                    x1={mx}
+                    y1={BASE + 18}
+                    x2={mx}
+                    y2={my + 6}
+                    stroke={m.color}
+                    strokeWidth="0.8"
+                    strokeDasharray="2 4"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: isActive ? 0.8 : 0.35 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: prefersReducedMotion ? 0.1 : 0.4 + m.x * 2 }}
+                  />
+                  {/* glow behind the peak */}
+                  <circle
+                    cx={mx}
+                    cy={my}
+                    r="20"
+                    fill={m.color}
+                    opacity={isActive ? 0.28 : 0.12}
+                    style={{ transition: "opacity 0.25s", filter: "blur(8px)" }}
+                  />
+                </g>
+              );
+            })}
+
             {/* the curve draws itself */}
             <motion.path
-              d={path}
+              d={line}
               stroke="url(#traj-stroke)"
-              strokeWidth="1.6"
+              strokeWidth="2"
               strokeLinecap="round"
               initial={{ pathLength: prefersReducedMotion ? 1 : 0 }}
               whileInView={{ pathLength: 1 }}
@@ -175,43 +226,43 @@ export default function Trajectory() {
               x1={X1}
               y1={BASE}
               x2={W - 14}
-              y2={BASE - 14}
+              y2={BASE - 22}
               stroke="#facc15"
-              strokeWidth="1.4"
+              strokeWidth="1.6"
               strokeDasharray="3 5"
               initial={{ opacity: 0 }}
-              whileInView={{ opacity: 0.8 }}
+              whileInView={{ opacity: 0.9 }}
               viewport={{ once: true }}
               transition={{ delay: prefersReducedMotion ? 0.3 : 2.7, duration: 0.8 }}
             />
             <motion.text
               x={W - 12}
-              y={BASE - 24}
+              y={BASE - 34}
               textAnchor="end"
-              fontSize="12"
+              fontSize="14"
               fontFamily="var(--font-fira-code), monospace"
+              fontWeight="600"
               fill="#facc15"
               initial={{ opacity: 0 }}
-              whileInView={{ opacity: 0.95 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: prefersReducedMotion ? 0.4 : 3.1, duration: 0.8 }}
             >
               PhD — ?
             </motion.text>
 
-            {/* milestone markers */}
-            {milestones.map((m, i) => {
+            {/* markers + always-visible labels */}
+            {milestones.map((m) => {
               const mx = toPx(m.x);
-              const my = BASE - m.h - 4;
+              const my = BASE - m.h - 3;
               const isActive = active === m.id;
               return (
                 <g key={m.id}>
-                  {/* generous invisible hit area */}
                   <rect
-                    x={mx - 26}
-                    y={my - 26}
-                    width="52"
-                    height={BASE + 20 - my}
+                    x={mx - 30}
+                    y={my - 40}
+                    width="60"
+                    height={BASE + 18 - my + 40}
                     fill="transparent"
                     style={{ cursor: "pointer" }}
                     onMouseEnter={() => setActive(m.id)}
@@ -220,13 +271,15 @@ export default function Trajectory() {
                   <motion.circle
                     cx={mx}
                     cy={my}
-                    r={isActive ? 5.5 : 3.5}
-                    fill={m.color}
+                    r={isActive ? 6.5 : 4.5}
+                    fill="#0a0a0a"
+                    stroke={m.color}
+                    strokeWidth="2"
                     initial={{ opacity: 0, scale: 0 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{
-                      delay: prefersReducedMotion ? 0.2 : 0.5 + (m.x * 2.2),
+                      delay: prefersReducedMotion ? 0.2 : 0.5 + m.x * 2.2,
                       type: "spring",
                       stiffness: 300,
                       damping: 18,
@@ -234,15 +287,34 @@ export default function Trajectory() {
                     style={{
                       transformOrigin: `${mx}px ${my}px`,
                       transition: "r 0.2s",
-                      filter: isActive ? `drop-shadow(0 0 6px ${m.color})` : undefined,
+                      filter: isActive ? `drop-shadow(0 0 8px ${m.color})` : undefined,
                     }}
                   />
+                  {/* always-visible event label */}
+                  <motion.text
+                    x={mx}
+                    y={my - 16}
+                    textAnchor="middle"
+                    fontSize="11.5"
+                    fontFamily="var(--font-fira-code), monospace"
+                    fontWeight={isActive ? 700 : 500}
+                    fill={m.color}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: isActive ? 1 : 0.85 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: prefersReducedMotion ? 0.2 : 0.7 + m.x * 2.2 }}
+                    style={{ cursor: "pointer" }}
+                    onMouseEnter={() => setActive(m.id)}
+                    onMouseLeave={() => setActive(null)}
+                  >
+                    {m.label}
+                  </motion.text>
                 </g>
               );
             })}
           </svg>
 
-          <p className="text-center text-[11px] font-mono text-text-muted/70 mt-2">
+          <p className="text-center text-[11px] font-mono text-text-muted/70 mt-1">
             hover a flare to resolve the event
           </p>
         </motion.div>

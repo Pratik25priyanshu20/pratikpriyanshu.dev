@@ -27,8 +27,6 @@ export default function Home() {
         <div className="section-divider" />
         <About />
         <div className="section-divider" />
-        <Trajectory />
-        <div className="section-divider" />
         <Publications />
         <QuantumDivider />
         <Projects />
@@ -38,6 +36,8 @@ export default function Home() {
         <Skills />
         <div className="section-divider" />
         <Certifications />
+        <div className="section-divider" />
+        <Trajectory />
         <div className="section-divider" />
         <Contact />
         <Footer />

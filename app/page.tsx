@@ -3,6 +3,7 @@ import ConsoleGreeting from "./components/ConsoleGreeting";
 import Navigation from "./components/Navigation";
 import Hero from "./components/Hero";
 import About from "./components/About";
+import Trajectory from "./components/Trajectory";
 import Publications from "./components/Publications";
 import Projects from "./components/Projects";
 import Blog from "./components/Blog";
@@ -25,6 +26,8 @@ export default function Home() {
         <Hero />
         <div className="section-divider" />
         <About />
+        <div className="section-divider" />
+        <Trajectory />
         <div className="section-divider" />
         <Publications />
         <QuantumDivider />
